@@ -1,0 +1,268 @@
+<html>
+<head>
+<title>Replacing file system support routines</title>
+</head>
+<body>
+<h4>Replacing file system support routines</h4>
+<br>
+<a href="x_intl.htm">&lt;&nbsp;Prev</a>&nbsp;&nbsp;<a href="_toc.htm">TOC</a>&nbsp;&nbsp;<a href="x_func.htm">Next&nbsp;&gt;</a>
+<p>
+Bullet normally handles all file I/O itself but in the registered version you can replace any or
+all of the file I/O calls with those of your own creation.  The calls that can be replaced are:
+<p>
+<ol>
+<li>CloseFile
+<li>CreateDir
+<li>CreateFile
+<li>DeleteFile
+<li>MoveFile
+<li>OpenFile
+<li>ReadFile
+<li>SeekFile
+<li>UpdateDirEntry
+<li>WriteFile
+<li>LockFile
+<li>IsRemote
+</ol>
+Why replace any of these?  Normally, you won't, but if you want to monitor all calls made to
+the file system,  or maybe even redirect file I/O to a single physical file, then being able
+to replace these calls is a necessary feature.  If you don't want to do the file I/O yourself,
+but still want to monitor what's going on, you can also sub-class the routines, so to speak,
+by calling the routines Bullet normally uses from your replacement routine.
+<p>
+This feature is not available in the evaluation (demo) version of Bullet.  See the Ordering
+page (click on the TOC link at the top) to purchase a license so you can use this feature.
+<p>
+One thing to keep in mind if you do this is that, depending on how you write your file I/O
+routines, if you replace one routine you'll probably have to replace them all.  The reason
+is that the internal Bullet routines make operating system calls for its file I/O, and if
+you instead plan on using C RTL code (FILE*, for example) for your Read/Write calls, your calls
+will no longer be compatible with the other Bullet file I/O routines.  So, if you change one,
+plan to change them all.
+<p>
+<br>
+Within the KH and DH structures is TBLT_AUXPACK *apPtr.  This is a pointer to the following
+structure:
+<pre>
+typedef struct _BLTAUXPACK {
+ ULONG  entries;                        // entries in this auxpack (12)
+ ULONG  flags;                          // bit0=1 then 64-bit file offsets used for TBLT_FO data (coming soon)
+ LL_IOCLOSEFILE   xioCloseFile;         //  1
+ LL_IOCREATEDIR   xioCreateDir;         //  2
+ LL_IOCREATEFILE  xioCreateFile;        //  3
+ LL_IODELETEFILE  xioDeleteFile;        //  4
+ LL_IOMOVEFILE    xioMoveFile;          //  5
+ LL_IOOPENFILE    xioOpenFile;          //  6
+ LL_IOREADFILE    xioReadFile;          //  7
+ LL_IOSEEKFILE    xioSeekFile;          //  8
+ LL_IOUPDATEDIRENTRY xioUpdateDirEntry; //  9
+ LL_IOWRITEFILE   xioWriteFile;         // 10
+ LL_IOLOCKFILE    xioLockFile;          // 11
+ LL_IOISREMOTE    xioIsRemote;          // 12
+} TBLT_AUXPACK;
+
+</pre>
+If apPtr is not 0, Bullet uses the information in this structure to determine what it calls to
+do file I/O.  Note that in some Bullet routines -- those routines that do not have a KH or DH
+structure as an argument -- you are required to include apPtr in the argument list specifically
+(see the prototypes for which calls).  Typically, you'll have a single global instance of
+TBLT_AUXPACK, and you'll point any KH/DH.apPtr member to it, though you can just as easily
+have separate and different TBLT_AUXPACK structures.
+<p>
+In normal use KH/DH.apPtr is set to 0.  In this case Bullet uses its internal file I/O routines.
+If apPtr is not 0 then Bullet checks each xio member in TBLT_AUXPACK when it needs to perform a
+file I/O call.  If the function pointer is not null, Bullet uses that function pointer instead
+of using its internal routine.
+<p>
+<br>
+<code>TBLT_AUXPACK.entries</code> must be set to the number of xio entries in the structure
+-- currently 12 -- before use.
+<p>
+To get the internal function pointers that Bullet uses for file I/O, use the Bullet support
+routine, <code>BltGetVar()</code>, with the BLTVAR_IFS option.  When using BLTVAR_IFS, set
+rcPtr (a prototyped argument for this routine) to point to your auxiliary pack structure rather
+than an rc variable.  On return from the call all xio members of the pack will be set to the
+internal function pointers.  You would do this only if you wanted to know the function addresses
+of the internal file I/O routines, such as would be needed if you wanted to sub-class the
+routines.
+<p>
+<b>64-bit file offsets</b>:  (this feature is not yet available) apPtr.flags, bit0,
+when set to 1, tells Bullet that any time it
+looks at a TBLT_FO* data type, that it is to treat that data as a 64-bit item.  In other words,
+if bit0=1 then theTBLT_FO* points to a 64-bit (INT64) integer, otherwise TBLT_FO* points to a
+32-bit (LONG) integer.  The .flags member is not directly related to xio pointers, so you can
+use .flags:bit0=1 even with all xio function pointers set to 0.  The flags apply only to the
+handle (KH/DH.handle) that is using this apPtr.flags value.
+<p>
+Each of the function pointers in the auxilary pack are prototyped.  The prototypes and a
+description of each follows.  With this you should be able to construct your own file I/O
+replacement routines.
+<pre>
+  1. typedef TBLT_RETC (TBLT_EXP *LL_IOCLOSEFILE)(TBLT_HANDLE handle);
+  2. typedef TBLT_RETC (TBLT_EXP *LL_IOCREATEDIR)(TBLT_FNCHAR *dirnamePtr);
+  3. typedef TBLT_RETC (TBLT_EXP *LL_IOCREATEFILE)(TBLT_FNCHAR *filenamePtr);
+  4. typedef TBLT_RETC (TBLT_EXP *LL_IODELETEFILE)(TBLT_FNCHAR *filenamePtr);
+  5. typedef TBLT_RETC (TBLT_EXP *LL_IOMOVEFILE)(TBLT_FNCHAR *currNamePtr, TBLT_FNCHAR *newNamePtr);
+  6. typedef TBLT_RETC (TBLT_EXP *LL_IOOPENFILE)(TBLT_FNCHAR *filenamePtr, ULONG mode, TBLT_HANDLE *handlePtr);
+  7. typedef TBLT_RETC (TBLT_EXP *LL_IOREADFILE)(TBLT_HANDLE handle, ULONG *bytesPtr, VOID *bufferPtr);
+  8. typedef TBLT_RETC (TBLT_EXP *LL_IOSEEKFILE)(TBLT_HANDLE handle, ULONG mode, TBLT_FO *posPtr);
+  9. typedef TBLT_RETC (TBLT_EXP *LL_IOUPDATEDIRENTRY)(TBLT_HANDLE handle);
+ 10. typedef TBLT_RETC (TBLT_EXP *LL_IOWRITEFILE)(TBLT_HANDLE handle, ULONG *bytesPtr, VOID *bufferPtr);
+ 11. typedef TBLT_RETC (TBLT_EXP *LL_IOLOCKFILE)(TBLT_HANDLE handle, ULONG mode, TBLT_FO *lockOffsetPtr, TBLT_FO *lockBytesPtr, ULONG timeout);
+ 12. typedef TBLT_RETC (TBLT_EXP *LL_IOISREMOTE)(TBLT_HANDLE handle, ULONG drive, ULONG *isRemotePtr, ULONG *flagsPtr);
+
+</pre>
+In the following, the return code for success is 0, and on error an appropriate code (such
+as the code returned by the operating system (GetLastError(), if needed)).  How you write the
+internal guts is up to you.
+<p>
+You can cast calling parameters within your code to different types, if you are consistent.
+For example, if TBLT_HANDLE in your replacement code is no longer the same type as defined by
+Bullet's header file (<em>eg</em>, you are using C's FILE* file I/O), then so long as the type
+is the same size (everything is either a 32-bit value or a 32-bit pointer) you can pass and
+receive any data you want and operate on it as you need to.
+<p>
+<br>
+1. Close the file:
+<pre>
+TBLT_RETC TBLT_EXP llx_ioCloseFile(TBLT_HANDLE handle) {
+ UINT rc = 0;
+ ;
+ return (TBLT_RETC)rc;
+}
+</pre>
+An example use of assigning this new function to the TBLT_AUXPACK structure:
+<pre>
+   apPtr->xioCloseFile = llx_ioCloseFile;
+
+</pre>
+2. Create a directory:
+<pre>
+TBLT_RETC TBLT_EXP llx_ioCreateDir(TBLT_FNCHAR *dirnamePtr) {
+ UINT rc = 0;
+ ;
+ return (TBLT_RETC)rc;
+}
+
+</pre>
+3. Create a file:
+<pre>
+TBLT_RETC TBLT_EXP llx_ioCreateFile(TBLT_FNCHAR *filenamePtr) {
+ UINT rc = 0;
+ ;                           // 183 is the Win32 return code, Bullet changes it to 80
+ if (rc == 183) {            // 183 = ERROR_ALREADY_EXISTS (ie, if exists rc, replace code)
+    rc = EXB_FILE_EXISTS;    //  80 = Bullet code for this
+ }
+ return (TBLT_RETC)rc;       // creates a file, handle must -always- be closed before returning
+}
+
+</pre>
+4. Delete a a file:
+<pre>
+TBLT_RETC TBLT_EXP llx_ioDeleteFile(TBLT_FNCHAR *filenamePtr) {
+ UINT rc = 0;
+ ;
+ return (TBLT_RETC)rc;
+}
+
+</pre>
+5. Rename (or move) a file:
+<pre>
+TBLT_RETC TBLT_EXP llx_ioMoveFile(TBLT_FNCHAR *currNamePtr, TBLT_FNCHAR *newNamePtr) {
+ UINT rc = 0;
+ ;
+ return (TBLT_RETC)rc;
+}
+
+</pre>
+6. Open an existing file:
+<pre>
+TBLT_RETC TBLT_EXP llx_ioOpenFile(TBLT_FNCHAR *filenamePtr, ULONG mode, TBLT_HANDLE *handlePtr) {
+ UINT rc = 0;
+ ;
+ return (TBLT_RETC)rc;  
+}
+
+</pre>
+7. Read from a file:
+<pre>
+TBLT_RETC TBLT_EXP llx_ioReadFile(TBLT_HANDLE handle, ULONG *bytesPtr, VOID *bufferPtr) {
+ UINT rc = 0;
+ ;
+ if (*bytesPtr != bytesThatWereRead) {  
+    rc = EXB_UNEXPECTED_EOF;
+ }                              // bytesPtr passed in with count of bytes to read
+ *bytesPtr = bytesThatWereRead; // and passed out with count of bytes actually read
+ ;
+ return (TBLT_RETC)rc;
+}
+
+</pre>
+8. Seek in a file:
+<pre>
+TBLT_RETC TBLT_EXP llx_ioSeekFile(TBLT_HANDLE handle, ULONG mode, TBLT_FO *posPtr) {
+ UINT rc = 0;
+ ;                      // mode=0: from start, mode=1: from current, mode=2: from end
+ return (TBLT_RETC)rc;  // if mode:bit7=1 then TBLT_FO is a pointer to a INT64 value
+}
+
+</pre>
+9. Commit a file:
+<pre>
+TBLT_RETC TBLT_EXP llx_ioUpdateDirEntry(TBLT_HANDLE handle) {
+ UINT rc = 0;
+ ;
+ return (TBLT_RETC)rc;
+}
+
+</pre>
+10. Write to a file:
+<pre>
+TBLT_RETC TBLT_EXP llx_ioWriteFile(TBLT_HANDLE handle, ULONG *bytesPtr, VOID *bufferPtr) {
+ UINT rc = 0;
+ if (*bytesPtr) {
+    // write to file for bytes in bytesPtr
+    ;
+    if (bytesThatWereWritten != *bytesPtr) {
+       rc = EXB_DISK_FULL;      // no bytes must be written
+    }
+    else {
+       *bytesPtr = bytesWritten; // update bytesPtr only if successful
+    }
+ }
+ else {
+    // if bytes to write is 0, truncate file at current file position (bufferPtr may be null)
+    ;
+ }
+ ;
+ return (TBLT_RETC)rc;
+}
+
+</pre>
+11. Lock a file region:
+<pre>
+TBLT_RETC TBLT_EXP llx_ioLockFile(TBLT_HANDLE handle, ULONG mode, TBLT_FO *lockOffsetPtr, TBLT_FO *lockBytesPtr, ULONG timeout) {
+ UINT rc = 0;           // timeout is in ms
+ ;                      // mode,bit0=0:lock,=1:unlock; bit1=0:exclusive,=1:shared; bit2=1:atomic
+ ;                      // if mode:bit7=1 then TBLT_FO are pointers to INT64 values
+ ;                      // if atomic not supported return EXB_ATOMIC_LOCK_NOT_SUPPORTED
+ return (TBLT_RETC)rc;  // if shared (read) lock not supported return EXB_READ_LOCKS_NOT_SUPPORTED
+}
+
+</pre>
+12. Determine if a file (or drive) is local or remote:
+<pre>
+TBLT_RETC TBLT_EXP llx_ioIsRemote(TBLT_HANDLE handle, ULONG drive, ULONG *isRemotePtr, ULONG *flagsPtr) {
+ UINT rc = 0;
+ ;                      // if handle is 0 then drive (0=curr,1=A...26=Z) is checked
+ ;                      // isRemote to return: (0=not remote, 1=remote: set only if no fail)
+ ;                      // flagsPtr to return: value that isRemotePtr is based (bit16=0 always) informational
+ return (TBLT_RETC)rc;  //
+
+</pre>
+<br>
+<br>
+<br>
+<center><font size=-1>All content Copyright &copy; 1999 Cornel Huth.  All rights reserved.</font></center>
+</body>
+</html>

@@ -1,0 +1,270 @@
+<html>
+<head>
+<title>BltIx4CreateFile</title>
+</head>
+<body>
+<h4>BltIx4CreateFile</h4>
+<br>
+<a href="r_biif.htm">&lt;&nbsp;Prev</a>&nbsp;&nbsp;<a href="_toc.htm">TOC</a>&nbsp;&nbsp;<a href="r_biof.htm">Next&nbsp;&gt;</a>
+<p>
+<pre>
+TBLT_RETC TBLT_ENTRY BltIx4CreateFile(ULONG nodeSize,
+                                      ULONG sortCmpCode,
+                                      ULONG codePage,
+                                      ULONG countryCode,
+                                      UCHAR *sortTablePtr,
+                                      VOID *keyExpPtr,
+                                      TBLT_DH *dhPtr,
+                                      TBLT_FNCHAR *filenamePtr,
+                                      TBLT_IX4PARSEEXPPTR xParseExpPtr,
+                                      ULONG maMode,
+                                      TBLT_AUXPACK *apPtr);
+
+ nodeSize       I:node size (512, 1024, 1536, 2048, 2560 bytes)
+ sortCmpCode    I:sort compare code (and special use flags)
+ codePage       I:code page to use
+ countryCode    I:country code to use
+ sortTablePtr   I:sort table to use
+ keyExpPtr      I:key expression string
+ dhPtr          I:data file control structure
+ filenamePtr    I:name of file to create (OEM characters recommended)
+ xParseExpPtr   I:function pointer to alternate expression parser
+ maMode         I:memory allocation mode
+ apPtr          I:auxiliary pack
+
+</pre>
+This routine creates an index file.
+<p>
+The <code>nodeSize</code> may be sized from 512 to 2560 bytes in 512-byte
+increments.  The default size is 512 bytes.  This node size applies to all
+nodes in this index file.  The larger the node size the more keys can be
+stored on any one node, but the more overhead there is operating on that
+node, and the more memory used by each open file.  There is one TBLT_KH structure
+per open index file.  The total bytes used per TBLT_KH structure is from 2&nbsp;KB
+for 512-byte nodes to 4&nbsp;KB for 2560-byte nodes. Larger node sizes are
+especially useful for long keys.  See the supplemental documentation for
+determining how many keys can fit on a given-sized node.
+<p>
+The <code>sortCmpCode</code> determines the type of key used and how the key is
+ordered.  Bullet has several internal sort compare functions, and the programmer
+can extend the built-in types to whatever he needs.  The internal types are:
+<p>
+<pre>
+  sortCmp        sort is by
+ ----------     --------------
+ SORT_ASCII     ASCII value
+ SORT_NLS       NLS sort table
+ SORT_S16       16-bit signed integer
+ SORT_U16       16-bit unsigned integer
+ SORT_S32       32-bit signed integer
+ SORT_U32       32-bit unsigned integer
+ SORT_S64       64-bit signed integer
+ SORT_U64       64-bit unsigned integer
+ SORT_MIXED     all internal types, including binary double, integer, string
+</pre>
+These should not be confused with data types, though they are related in that
+certain data types can only be sorted by certain sortCmp routines.  If Bullet
+does not have a sort-compare routine for a data type you need to use (for
+example, unpacked BCD), you can extend the built-in support by writing compare
+routines and numbering them with any of the unused sort-compare codes (over
+200 are available).  Details on doing this are in the supplemental documentation.
+<p>
+Of the internal types, all but SORT_MIXED require that key components be
+of the same type.  For example, if SORT_NLS is used, then each key component
+must be an NLS type.  What is a key component?
+<p>
+In the key expression
+<pre>
+  "SUBSTR(LNAME,1,5)+SUBSTR(FNAME,1,1)+MI"
+</pre>
+the result of SUBSTR(LNAME,1,5) is one key component (LNAME is a field name
+in the data record), the result of SUBSTR(FNAME,1,1) is the second, and MI
+is the third.  Bullet allows up to 16 key components to be used as the key.  SORT_NLS
+could be used for the sortCmp mode of this example.  You can also have multiple
+SORT_S16 components, or SORT_S64, for example, just so long as the components are
+the same type.
+<p>
+Keys with more than one component are called composite keys, or multi-field keys.  Keys
+with one component are called atomic keys, or single-field keys.  Some say to avoid
+composite keys in the belief that composite keys make it more difficult to maintain
+integrity.  I say use whatever is best for the problem at hand.  I use composite keys
+because I can get a unique key in a small size, if a suitable unique field is not
+otherwise available.
+<p>
+<br>
+For some field types (fieldType, a part of the DBF field descriptor) <em>only</em>
+SORT_MIXED may be used.  This includes the fieldTypes of Y,3,4,5,6,7,8 (3=SORT_MIXED_S16 ...
+8=SORT_MIXED_U64).  Note that SORT_MIXED_* values are not used as sortCmp
+codes; they are used to denote special Bullet (binary) field types.  These
+types (including Y) are stored as binary data in the DBF field, and they
+are also stored as binary data in the index file.
+<p>
+When SORT_MIXED is used with C field types, the C fields are always sorted by NLS.
+When used with N or F field types (ASCII text), the fields are converted to, and sorted
+as, floating-point doubles.  Any of the supported field types may be used when
+SORT_MIXED is specified.
+<p>
+For standard and common extended field types (C,N,D,L,M,F,B,G, which have
+ASCII text DBF field contents), when SORT_ASCII or SORT_NLS is used, the index
+values (keys) derived are also in ASCII text, even N and F fields.  However, if
+the sortCmp code is SORT_S16 to SORT_U64, or SORT_MIXED, and the field type is
+N or F, the index values stored for keys derived on these fields are binary; Bullet
+converts the ASCII text to binary form and uses that form in the index file.
+<p>
+<strong>Note:</strong>&nbsp;If Bullet converts an N or F field type (in other words,
+" 123.45" text) to binary because the index sortCmp code is SORT_S64, SORT_U64
+(convert to INT64), or SORT_MIXED (convert to DOUBLE), an
+<pre>
+ x87 FPU or operating system x87 emulator support
+</pre>
+must be available.  This is required only for converting text to 64-bit integer or
+double binary data, such as when storing a key.  Once converted the FPU is no longer
+required.  Therefore, if FPU support is not available when writing to the index
+you should use data record fields that are already in binary (fieldTypes SORT_MIXED_S64,
+SORT_MIXED_U64, or Y, which are described in <code>BltDataCreateFile()</code>).
+An FPU is not needed if simply reading indices with 64-bit integer or double keys, nor
+is one required when writing if the DBF data is already in binary form (<i>ie</i>, if
+no conversion from text to 64-bit integer or double float is needed).  Many numeric
+data fields can be sorted properly using SORT_ASCII or SORT_NLS, as can the date field
+type (dates are stored in the DBF record as YYYYMMDD, for example: '19990228').
+<br>
+<p>
+The sortCmpCode is a multi-value item, which stores the above-mentioned
+sort-compare ID in the low byte of .sortCompCode.  The high-byte (of the
+low word (LW)) has a special purpose, and is only used when the programmer
+wants an index file for a non-DBF file.  When this is needed, the LW high-
+byte is the key length.  More of this special case is found in the
+supplemental documentation.
+<p>
+The high word of the sortCmpCode is used for flags.  The flags are:
+<pre>
+ SORT_DUPS_ALLOWED      allow duplicate keys in the index file
+ SORT_USE_OEM_SET       use OEM character set (default)
+ SORT_USE_ANSI_SET      use ANSI character set
+</pre>
+Normally, an index file is not much use if there are duplicate keys in it (at least,
+not the <em>primary key</em> index), but there are cases where it's simpler to design
+and access tables with <code>SORT_DUPS_ALLOWED</code>.
+<p>
+An example sortCmpCode, in C:
+<pre>
+ khPtr->sortCmpCode = SORT_NLS | SORT_DUPS_ALLOWED;
+</pre>
+The <code>codePage</code> and <code>countryCode</code> are used in conjunction with
+the <code>sortTablePtr</code>.  If you already have a sort table (a table of weights
+for each character, 0 to 255), then use the sortTablePtr member of TBLT_KH to send it to
+the index file create routine.  If you don't have a specific sort table (often the
+case) you can use the codePage and countryCode members and have the
+operating system provide the sort table.
+<p>
+Setting both codePage and countryCode to 0 indicates that the operating
+system is to use the default codePage/countryCode and is to return to
+Bullet the sort table for this cp/cc setting.  Upon return from the create,
+TBLT_KH.codePage, .countryCode, and .sortTable[] are filled in with the actual
+values.
+<p>
+If you specify non-zero values for codePage and countryCode, the codepage
+must be available to the operating system or an <code>EXB_FILE_NOT_FOUND(2)</code>
+error is likely the result.  If one or the other are non-zero, Bullet attempts
+to determine what the zero value member is.
+<p>
+Bullet maintains two internal, hard-coded sort tables (CPs 850 and 1252),
+either of which can be retrieved by a call to <code>BltGetSortSequenceTable()</code>
+using special argument values.  See the supplemental documentation for
+details.
+<p>
+The keys built are based on the index expression string in <code>keyExpPtr</code>
+and the fields in the already-opened DBF file of dhPtr.  The standard
+expression parser, which translates the expression string into machine
+data, may be replaced at runtime with an alternate routine by using the
+TBLT_KH.xParseExpPtr function pointer, and by using the xParseExpPtr argument
+to this routine.
+<p>
+The maximum length of the key expression is 379 bytes (plus the 0 terminator).  The
+maximum evaluated key length (the key itself) is 196 bytes.  Long keys greatly affect
+performance speed and size; the smaller the key the better.  Keys of say 8 to 16 bytes
+keys are good key sizes.  Keys of 100 bytes are terrible.  To construct small keys,
+use <code>SUBSTR()</code> and use mostly-unique parts of fields.  Indexing on
+entire names is generally pointless.  Index instead, for example, on the first four
+characters of the last name, plus the first character of the first name, and perhaps
+the last four of the phone number.  That would be a very unique key in just 9 bytes,
+while the name-only key could easily be 60 bytes and not at all unique.  The index file
+would also be much smaller and much faster.
+<p>
+The optional source module, xparsex.c, can be used as a guide on how to
+write a Bullet parser and to get its interface requirements.  The built-in parser,
+used when <code>xParseExpPtr</code> is 0, understands single-byte character strings
+(all fieldnames should be OEM characters, field data may be anything) that may
+include the following functions and symbols when operating on the key expression:
+<pre>
+ DESCEND()
+ UPPER()
+ SUBSTR()
+ +
+ all fieldnames in TBLT_DH.FD[]
+</pre>
+<code>DESCEND()</code> switches collating for that key component to descending
+order (ascending is the default).
+<p>
+<code>UPPER()</code> uppercases OEM characters only, and typically is not
+used since Bullet provides for case-insensitive compares using National
+Language Services (NLS, sortCmpCode = SORT_NLS).
+<p>
+<code>SUBSTR()</code> extracts parts of a field's data, providing for more
+efficient, smaller key sizes.
+<p>
+Example key expressions in C follow, where names are valid fieldnames:
+<pre>
+ keyExp[] = "FIELD_ONE";
+ keyExp[] = "FIELD1 + DESCEND(FIELD_TWO)";
+ keyExp[] = "SUBSTR(LNAME,1,5)+SUBSTR(SSN,6,4)";
+ keyExp[] = "SUBSTR(LNAME,1,5)+ID_CODE";
+ keyExp[] = "UPPER(LNAME+FNAME+MI)";
+</pre>
+Note: <code>UPPER()</code> is not allowed to be nested within a <code>DESCEND()</code>.
+<p>
+The key expression is evaluated at two places: <code>BltIx4CreateIndex()</code> and
+<code>BltFuncIx4Reindex()</code>.  It is permitted to alter the DBF field structure
+(for example, to insert a new field), and after this is done a reindex must be made
+on all affected index files.
+<p>
+Dynamic key expression parsing is possible if using an alternate Build Key routine.  The
+optional xBldKey.c file can be used as a guide.  At the simplest extreme, it's possible
+to forgo a true parser altogether and to simply update the XLATEX structure in TBLT_KH as
+needed in an alternate "parser".  (The build-key routine uses the data in TBLT_KH.XLATEX.)
+<p>
+For double-byte character strings, or Unicode strings, replacement Parser,
+BuildKey, and SortCmp routines are needed, or the strings can be converted
+to ANSI before calling Bullet and converted back to Unicode after.  More on
+double-byte and Unicode support is in the supplemental documentation.
+<p>
+<br>
+<code>dhPtr</code> is the pointer to the TBLT_DH structure that this index file
+is to index.  This is needed to get the field structure of the DBF so the key expression
+can be evaluated.  The dhPtr is best gotten from the <code>BltDataOpenFile()</code>
+routine.  To create an index without an open DBF file see the supplemental documentation.
+<p>
+The <code>filename</code> is the name to be given to the file to create.
+<p>
+<code>xParseExpPtr</code> is the pointer to an optional parser for the key expression.
+When 0 the internal parser is used.  The optional xparsex.c file can be used as a guide
+in developing an external parser.
+<p>
+<code>maMode</code> is the memory allocation mode.  In normal use this is specified
+directly in each TBLT_KH structure, but at this point in the file creation there
+isn't a TBLT_KH structure.  The standard memory allocation mode is 0.
+<p>
+<code>apPtr</code> is the pointer to an optional auxiliary pack.  Set apPtr = 0 if there
+is no pack.  This pack lets you override the internal operating system IFS calls for this
+handle, and set IFS options, such as 64-bit file offsets.  See the supplemental
+documentation for details.  Once the file is opened, the apPtr is specified directly in the
+TBLT_KH structure.
+<p>
+<em>Returns:</em>&nbsp;Non-zero indicates an error, otherwise the index file is created.
+<br>
+<br>
+<br>
+<p>
+<center><font size=-1>All content Copyright &copy; 1999 Cornel Huth.  All rights reserved.</font></center>
+</body>
+</html>

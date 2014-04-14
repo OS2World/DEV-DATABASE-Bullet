@@ -1,0 +1,119 @@
+<html>
+<head>
+<title>Optional source pack contents</title>
+</head>
+<body>
+<h4>Optional source pack contents</h4>
+<br>
+<a href="x_func.htm">&lt;&nbsp;Prev</a>&nbsp;&nbsp;<a href="_toc.htm">TOC</a>&nbsp;&nbsp;<a href="supdoc.htm">Next&nbsp;&gt;</a>
+<p>
+The optional source package, available only to Bullet 3.0 license holders, includes working source
+code of <b>select</b> internal Bullet routines, based directly on the code used by Bullet itself.
+<p>
+If you intend to write replacement file I/O routines or index support routines, for example, then
+buying the source package will save you many hours of time.  You cannot recreate Bullet from these
+files since parts of Bullet remain proprietary and confidential.
+<p>
+This optional package is only useful for those programmers that intend to develop replacement
+routines, as discussed elsewhere in this supplement, or to develop alternative methods to
+interface with the database engine, such as writing a better pack routine, a different Insert
+routine, or just to have a better knowledge of how Bullet does what it does.
+<p>
+The following are the source files included in the optional source pack, and the routines within
+those source files.
+<ol>
+<li>#_fileio.c - the low-level file routines for the platform(s) you have licensed.  This file
+is operating system specific.
+<p>
+<pre>
+ TBLT_RETC TBLT_EXP ll_ioCloseFile(ULONG handle);
+ TBLT_RETC TBLT_EXP ll_ioCreateDir(TBLT_FNCHAR *dirnamePtr);
+ TBLT_RETC TBLT_EXP ll_ioCreateFile(TBLT_FNCHAR *filenamePtr);
+ TBLT_RETC TBLT_EXP ll_ioDeleteFile(TBLT_FNCHAR *filenamePtr);
+ TBLT_RETC TBLT_EXP ll_ioMoveFile(TBLT_FNCHAR *currNamePtr, TBLT_FNCHAR *newNamePtr);
+ TBLT_RETC TBLT_EXP ll_ioOpenFile(TBLT_FNCHAR *filenamePtr, ULONG mode, ULONG *handlePtr);
+ TBLT_RETC TBLT_EXP ll_ioReadFile(ULONG handle, ULONG *bytesPtr, VOID *bufferPtr);
+ TBLT_RETC TBLT_EXP ll_ioSeekFile(ULONG handle, ULONG mode, TBLT_FO *posPtr);
+ TBLT_RETC TBLT_EXP ll_ioUpdateDirEntry(ULONG handle);
+ TBLT_RETC TBLT_EXP ll_ioWriteFile(ULONG handle, ULONG *bytesPtr, VOID *bufferPtr);
+ TBLT_RETC TBLT_EXP ll_ioLockFile(ULONG handle, ULONG mode, TBLT_FO *lockOffsetPtr, TBLT_FO *lockBytesPtr, ULONG timeout);
+ TBLT_RETC TBLT_EXP ll_ioIsRemote(ULONG handle, ULONG drive, ULONG *isRemotePtr, ULONG *flagsPtr);
+
+</pre>
+<li>xsortcmp.c - the sort-compare routine:
+<p>
+<pre>
+ TBLT_CMPC TBLT_CALLBACK BltFuncIx4SortCmp(TBLT_KH *khPtr, VOID *arg1ptr, VOID *arg2ptr, CHAR *hvBufferPtr, ULONG hasRecNo);
+
+</pre>
+<li>xbltkey.c - the build-key routine:
+<p>
+<pre>
+ TBLT_RETC TBLT_CALLBACK BltFuncIx4BuildKey(TBLT_KH *khPtr, VOID *recordPtr, VOID *keyPtr);
+
+</pre>
+<li>xparsex.c - the key expression parser:
+<p>
+<pre>
+ TBLT_RETC TBLT_CALLBACK BltFuncIx4ParseExp(TBLT_KH *khPtr, ULONG *keyLenPtr);
+
+</pre>
+<li>optix4.c - high-level key/record I/O:
+<p>
+<pre>
+ TBLT_RETC TBLT_ENTRY BltIx4Insert(TBLT_KH *khPtr, VOID *keyBufferPtr, VOID *recordPtr, ULONG *recNoPtr, ULONG *actionPtr);
+ TBLT_RETC TBLT_ENTRY BltIx4Update(TBLT_KH *khPtr, VOID *keyBufferPtr, VOID *newRecPtr, ULONG recNo, ULONG *actionPtr);
+ TBLT_RETC TBLT_ENTRY BltIx4GetFirst(TBLT_KH *khPtr, VOID *keyBufferPtr, ULONG *recNoPtr, VOID *recordPtr);
+ TBLT_RETC TBLT_ENTRY BltIx4GetNext(TBLT_KH *khPtr, VOID *keyBufferPtr, ULONG *recNoPtr, VOID *recordPtr);
+ TBLT_RETC TBLT_ENTRY BltIx4GetPrev(TBLT_KH *khPtr, VOID *keyBufferPtr, ULONG *recNoPtr, VOID *recordPtr);
+ TBLT_RETC TBLT_ENTRY BltIx4GetLast(TBLT_KH *khPtr, VOID *keyBufferPtr, ULONG *recNoPtr, VOID *recordPtr);
+ TBLT_RETC TBLT_ENTRY BltIx4GetEqual(TBLT_KH *khPtr, VOID *keyBufferPtr, ULONG *recNoPtr, VOID *recordPtr);
+ TBLT_RETC TBLT_ENTRY BltIx4GetEqualOrGreater(TBLT_KH *khPtr, VOID *keyBufferPtr, ULONG *recNoPtr, VOID *recordPtr);
+ TBLT_RETC TBLT_ENTRY BltIx4GetEqualOrLesser(TBLT_KH *khPtr, VOID *keyBufferPtr, ULONG *recNoPtr, VOID *recordPtr);
+
+</pre>
+<li>optexix4.c - insert and update transaction routines
+<p>
+<pre>
+ TBLT_RETC TBLT_ENTRY BltIx4InsertEx(TBLT_IUEX *iuexPtr, ULONG *slotPtr);
+ TBLT_RETC TBLT_ENTRY BltIx4UpdateEx(TBLT_IUEX *iuexPtr, ULONG *slotPtr, ULONG maMode);
+
+</pre>
+<li>optdata.c - data sort and pack routines:
+<p>
+<pre>
+ TBLT_RETC TBLT_ENTRY BltDataSort(TBLT_FNCHAR *indexnamePtr, TBLT_FNCHAR *filenamePtr, TBLT_FNCHAR *newFilenamePtr,TBLT_DATACALLBACKPTR callBackPtr, TBLT_AUXPACK *apPtr);
+ TBLT_RETC TBLT_ENTRY BltDataPack(TBLT_FNCHAR *filenamePtr, TBLT_FNCHAR *newFilenamePtr,TBLT_DATACALLBACKPTR callBackPtr, TBLT_AUXPACK *apPtr);
+
+</pre>
+<li>lockdata.c - data lock routines:
+<p>
+<pre>
+ TBLT_RETC TBLT_ENTRY BltLockDataHeader(TBLT_DH *dhPtr, ULONG mode, ULONG timeout);
+ TBLT_RETC TBLT_ENTRY BltUnlockDataHeader(TBLT_DH *dhPtr);
+ TBLT_RETC TBLT_ENTRY BltLockDataRecord(TBLT_DH *dhPtr, ULONG mode, ULONG recNoStart, ULONG recCount, ULONG timeout);
+ TBLT_RETC TBLT_ENTRY BltUnlockDataRecord(TBLT_DH *dhPtr, ULONG recNoStart, ULONG recCount);
+
+</pre>
+<li>lockix4.c - index lock routines:
+<p>
+<pre>
+ TBLT_RETC TBLT_ENTRY BltLockIx4File(TBLT_KH *khPtr, ULONG mode, ULONG timeout);
+ TBLT_RETC TBLT_ENTRY BltUnlockIx4File(TBLT_KH *khPtr);
+
+</pre>
+<li>lockex.c - lock transaction routines:
+<p>
+<pre>
+ TBLT_RETC TBLT_ENTRY BltLockEx(TBLT_LOCKEX *lockExPtr, ULONG *slotPtr, ULONG timeout);
+ TBLT_RETC TBLT_ENTRY BltUnlockEx(TBLT_LOCKEX *lockExPtr, ULONG *slotPtr);
+
+</pre>
+</ol>
+<br>
+<br>
+<br>
+<p>
+<center><font size=-1>All content Copyright &copy; 1999 Cornel Huth.  All rights reserved.</font></center>
+</body>
+</html>

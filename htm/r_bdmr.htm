@@ -1,0 +1,54 @@
+<html>
+<head>
+<title>BltDataMarkRecord</title>
+</head>
+<body>
+<h4>BltDataMarkRecord</h4>
+<br>
+<a href="r_bddr.htm">&lt;&nbsp;Prev</a>&nbsp;&nbsp;<a href="_toc.htm">TOC</a>&nbsp;&nbsp;<a href="r_bdur.htm">Next&nbsp;&gt;</a>
+<p>
+<pre>
+TBLT_RETC TBLT_ENTRY BltDataMarkRecord(TBLT_DH *dhPtr,
+                                       ULONG recNo,
+                                       ULONG tagChar);
+
+
+ dhPtr          IO:data file control structure
+ recNo          I:number of record to remove
+ tagChar        I:byte to set tag character
+
+</pre>
+This routine marks a data record's tag byte (the first byte of the record)
+with the tagChar byte.
+<p>
+Data records are not physically removed when deleted.  Instead, records are
+tagged, or marked, as being deleted and then later removed by using
+<code>BltDataPack()</code>.  The first byte of each data record is reserved for
+this byte.  (Your first field starts at the second byte of the data record.)
+<p>
+The standard markers for this are &lt;space&gt; (a blank, ASCII 32) and <code>*</code> (a
+star, ASCII 42).  The space indicates that the record is not deleted, and a
+star indicates that the record is deleted (marked as deleted, that is).
+<p>
+Two C macros are included if explicit delete and undelete names are needed.
+Supply the dhPtr and recNo args, leaving the tagChar to be set by the
+macro.
+<pre>
+ #define BltDataDeleteRecord(a,b)    BltDataMarkRecord(a,b,42)
+ #define BltDataUndeleteRecord(a,b)  BltDataMarkRecord(a,b,32)
+</pre>
+Since your program has control of the entire data record already, this
+routine is not necessary; you may just set the first byte of your record as
+you want.  However, you must still reserve this first byte for this use.
+<p>
+<em>Return:</em>&nbsp;Non-zero indicates an error, otherwise the first byte of the record is set
+to tagChar.
+<br>
+<br>
+<br>
+<br>
+<br>
+<p>
+<center><font size=-1>All content Copyright &copy; 1999 Cornel Huth.  All rights reserved.</font></center>
+</body>
+</html>

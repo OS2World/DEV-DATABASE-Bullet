@@ -1,0 +1,43 @@
+<html>
+<head>
+<title>BltIx4FlushHeader</title>
+</head>
+<body>
+<h4>BltIx4FlushHeader</h4>
+<br>
+<a href="r_biclf.htm">&lt;&nbsp;Prev</a>&nbsp;&nbsp;<a href="_toc.htm">TOC</a>&nbsp;&nbsp;<a href="r_bich.htm">Next&nbsp;&gt;</a>
+<p>
+<pre>
+TBLT_RETC TBLT_ENTRY BltIx4FlushHeader(TBLT_KH *khPtr);
+
+
+ khPtr          IO:index file control structure
+
+</pre>
+This routine flushes the internal IX4 header data to the IX4 index file on
+disk and updates the directory entry for the correct size.
+<p>
+This routine is essential for multi-access use.  It is used in conjuntion
+with the Lock routines.  Before unlocking the index file a call to this
+routine is necessary to ensure that the disk image is up-to-date for the
+next access, which may be made from anywhere not just your program.
+<p>
+This routine is automatically called by <code>BltUnlockIx4File()</code>.
+<p>
+Any file that has been written to and had its size changed or its internal
+representation changed does not have this change written to disk until a
+flush is done, or the handle is closed.  A flush can be performed after
+every write action (<code>BltIx4Insert()</code>, for example), or not until
+the handle is closed, or somewhere in between those two extremes, such as
+when an idle period is detected.   This is important also since this routine
+tells the operating system to flush its buffers for this handle to disk, as well.
+<p>
+<em>Return:</em>&nbsp;Non-zero indicates an error, otherwise the file's IX4 header
+was updated.
+<br>
+<br>
+<br>
+<p>
+<center><font size=-1>All content Copyright &copy; 1999 Cornel Huth.  All rights reserved.</font></center>
+</body>
+</html>

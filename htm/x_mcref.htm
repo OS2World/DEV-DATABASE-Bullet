@@ -1,0 +1,521 @@
+<html>
+<head>
+<title>Manifest constants</title>
+</head>
+<body>
+<h4>Manifest constants</h4>
+<br>
+<a href="x_rcref.htm">&lt;&nbsp;Prev</a>&nbsp;&nbsp;<a href="_toc.htm">TOC</a>&nbsp;&nbsp;<a href="x_files.htm">Next&nbsp;&gt;</a>
+<p>
+<table border=1 cellspacing=0 cellpadding=4>
+<caption><b>Manifest constants (ordered as in b3define.h)</b></caption>
+<tr>
+<th>MC Name
+<th>Value
+<th>Explanation
+<tr>
+<td align=left><code>MAX_DBF_FIELDS</code>
+<td align=right><code>1024</code>
+<td align=left>This is the maximum number of fields that a Bullet record may have.  The
+recommended maximum is 254.
+<tr>
+<td align=left><code>MAX_RECORD_LENGTH</code>
+<td align=right><code>65024</code>
+<td align=left>This is the maximum number of bytes that a Bullet record may have.  The
+main limitation is that this is recorded in the DBF header as a 16-bit value.  This size
+must be LTE the maximum allocation size, the default of which is stored in the global
+bullet_MASZ (described below).  It's recommended that record lengths be no greater than
+1024 bytes.
+<tr>
+<td align=left><code>MAX_KEY_LENGTH</code>
+<td align=right><code>196</code>
+<td align=left>This is the maximum length, in bytes, of the key value.  The recommended key
+length is from 8 to 16 bytes.
+<tr>
+<td align=left><code>IX4_MAX_EXP_SIZE</code>
+<td align=right><code>380</code>
+<td align=left>This is the maximum length of the text key expression, in bytes, including
+the terminating 0.
+<tr>
+<td align=left><code>XACTION_IX4_BIT</code>
+<td align=right><code>1</code>
+<td align=left>KH.xactionFlag, bit0=1 (R/O), means that the index file has not been
+properly flushed/closed.  When a file is opened, this flag is checked, and an error
+is reported if it is still set.  The difference between this and the dirty flag
+(KH.flags, bit0) is that this flag is written to disk, while the dirty flag exists
+only in memory.  This bit is usually only cleared by Blt*FlushHeader().
+<tr>
+<td align=left><code>XACTION_DBF_BIT</code>
+<td align=right><code>1</code>
+<td align=left>DH.xactionFlag, bit0=1 (R/O), means that the DBF file has not been
+properly flushed/closed yet.
+<tr>
+<td align=left><code>XACTION_DBT_BIT</code>
+<td align=right><code>2</code>
+<td align=left>DH.xactionFlag, bit1=1 (R/O), means that the DBT (memo) file has not been
+properly flushed/closed yet.
+<tr>
+<td align=left><code>FLAGS_DIRTY_BIT</code>
+<td align=right><code>1</code>
+<td align=left>DH/KH.flags, bit0=1 (R/O): This flag is set whenever the memory image
+of the header changes from that on disk as known by this handle.  For example, if
+a record is added to the data file, the in-memory image of the header shows one more
+record, yet the disk image still has the old count of records.  A Blt*FlushHeader()
+or a Blt*CloseFile() updates the disk image.  This flag should not be altered by
+the programmer.
+<tr>
+<td align=left><code>FLAGS_FULL_LOCK_BIT</code>
+<td align=right><code>2</code>
+<td align=left>DH/KH.flags, bit1=1 (R/O): This flag indicates that the file handle
+has at least one full-lock active.  Only the first full-lock is propagated to the
+operating system; subsequent full-locks increment DH/KH.lockCount.  A full-lock is
+when the entire file is locked for use by this handle only (see next).
+<tr>
+<td align=left><code>FLAGS_FULL_SHARED_LOCK_BIT</code>
+<td align=right><code>4</code>
+<td align=left>DH/KH.flags, bit2=1 (R/O): This flag indicates that the file handle's
+full lock is a shared lock, and that any process may read from the file, but no
+process may write to it.  If a file has a shared lock active, all processes that
+are using that file must also, by definition, also have a shared lock on the file.
+<tr>
+<td align=left><code>FLAGS_READ_THROUGH_LOCK_BIT</code>
+<td align=right><code>8</code>
+<td align=left>DH/KH.flags, bit3=1 (set at open, R/W): This flag specifies a locking
+technique:  Whenever a process wants to read from the handle, it ignores locking
+altogether (or attempts to lock but ignores any locking error).  When the process wants
+to write to the handle it locks the handle.  With this technique, reads can always access
+the file, but writes will fail if already locked.  This is accomplished by locking the
+file bytes at the last half of the maximum file size (for example, above the 1 GB mark),
+so this technique effectively reduces the maximum file size to one-half normal.  This
+flag is usually set when the file is opened, by may be changed any time.
+<tr>
+<td align=left><code>FLAGS_SKIP_DELETED_BIT</code>
+<td align=right><code>16</code>
+<td align=left>DH.flags, bit4=1 (set at data open, R/W): This flag causes DBF records
+with a delete tag of '<code>*</code>' to be skipped by the high-level indexed access
+routines, BltIx4Get*().  This flag is normally set when the data file is opened, but
+may be changed at any time.
+<tr>
+<td align=left><code>FLAGS_ATOMIC_BIT</code>
+<td align=right><code>16</code>
+<td align=left>KH.flags, bit4=1 (set at ix4 open, R/W): This flag causes all index access
+to start from the key that is in the keyBuffer. This is especially useful if multiple threads
+share a KH structure since one thread may change the last-accessed key for the KH structure
+that another thread was using (for example, if the other thread was in a sequence of GetNext
+calls).  By allowing the GetNext calls to specify from where in the index file to start its
+get-next operation, a thread can continue where it last left off, regardless of what other
+threads did in reading the index.  Typically, the last key/recNo pair access is used in the
+keyBuffer/recNo, so that the GetNext starts right where it left off.  Another use for this
+is when updating, since after an index update the index is repostioned to the new, updated
+key.  This flag is usually set at index file open, but may be changed any time.
+<tr>
+<td align=left><code>FLAGS_HDR_LOCK_BIT</code>
+<td align=right><code>32</code>
+<td align=left>DH/KH.flags, bit5=1 (R/O): This flag is set when the DBF data header is locked,
+but not when a full-lock is active.  You cannot have both a full-lock and a header lock.  There
+is no header lock for IX4 files.
+<tr>
+<td align=left><code>FLAGS_HDR_SHARED_LOCK_BIT</code>
+<td align=right><code>64</code>
+<td align=left>DH/KH.flags, bit6=1 (R/O): This flag indicates that the DBF file handle's
+header lock is a shared lock.  See FLAGS_FULL_SHARED_LOCK_BIT for more.
+<tr>
+<td align=left><code>FLAGS_READONLY_BIT</code>
+<td align=right><code>128</code>
+<td align=left>DH/KH.flags, bit7=1 (set at file open, R/W): This flags that the file is
+not to be written to.  This is a logical state and controls only Bullet access (not low-level
+Bullet calls, though) to the handle.  A write attempt returns EXB_READONLY.
+<tr>
+<td align=left><code>FLAGSEX_IU_SKIPDATA</code>
+<td align=right><code>1</code>
+<td align=left>This flag is used in the TBLT_IUEX structure, .flags member, and indicates that
+BltIx4InsertEx/UpdateEx is to skip the data record add/update, since it was already done
+previously.
+<tr>
+<td align=left><code>FLAGSEX_LOCK_DUAL</code>
+<td align=right><code>128</code>
+<td align=left>This flag is used in the TBLT_LOCKEX structure, .flags member, and indicates that
+BltLockEx() is to also lock the data file handle that belongs to the khdhPtr->xbLinkPtr handle
+(where khdhPtr is to a KH structure).  This allows the locking of both an index file and its data
+file with just one list item.  Two separate list items could be used, instead.
+<tr>
+<td align=left><code>SORT_ASCII</code>
+<td align=right><code>1</code>
+<td align=left>This constant is used as the KH.sortCmpCode (low-byte of the low-word).  It
+indicates that the key is to be sorted by ASCII value.  This is case-sensitive.  All key
+components are sorted by this method.  Text numbers, if aligned, will sort as expected if
+positive.  The low-byte of the low-word of KH.sortCmpCode is from bit0 to bit7.
+<p>
+NOTE: The high-byte of the LOW-word of KH.sortCmpCode is used only when an external data
+file is used, and in that case is used as the key length.  Using an external data file is
+described elsewhere in this supplement.
+<p>
+The low-byte of the HIGH-word of KH.sortCmpCode is used for flags (<code>SORT_DUPS_ALLOWED</code>
+and <code>SORT_USE_ANSI_SET</code>), described below.
+<tr>
+<td align=left><code>SORT_NLS</code>
+<td align=right><code>2</code>
+<td align=left>This constant is used as the KH.sortCmpCode (low-byte).  It indicates that the
+key is to be sorted by NLS value, which is case-insensitive and normally works well for
+international use.  All key components are sorted by this method.  See SORT_MIXED, below,
+for more versatile sortCmp methods.
+<tr>
+<td align=left><code>SORT_S16</code>
+<td align=right><code>3</code>
+<td align=left>This constant is used as the KH.sortCmpCode (low-byte). It indicates that the
+key is to be sorted as a 16-bit signed binary value.  If the DBF field is a text number, such
+as an N or F field type ("123"), its key component is converted to binary by Bullet when placed
+in the index file.  The field may also be a binary value (see the field type SORT_MIXED_S16,
+below). All key components must be of this type (there may be from one to 16 key components).
+<tr>
+<td align=left><code>SORT_U16</code>
+<td align=right><code>4</code>
+<td align=left>This constant is used as the KH.sortCmpCode (low-byte). This is similar to
+SORT_S16 but sorted as an unsigned 16-bit value.
+<tr>
+<td align=left><code>SORT_S32</code>
+<td align=right><code>5</code>
+<td align=left>This constant is used as the KH.sortCmpCode (low-byte). This is similar to
+SORT_S16 but sorted as an signed 32-bit value.
+<tr>
+<td align=left><code>SORT_U32</code>
+<td align=right><code>6</code>
+<td align=left>This constant is used as the KH.sortCmpCode (low-byte). This is similar to
+SORT_S16 but sorted as an unsigned 32-bit value.
+<tr>
+<td align=left><code>SORT_S64</code>
+<td align=right><code>7</code>
+<td align=left>This constant is used as the KH.sortCmpCode (low-byte). This is similar to
+SORT_S16 but sorted as an signed 64-bit value.  If the field type is a text number, an
+x86 FPU must be available so Bullet can convert the text to binary (64-bit and FP text-to-
+binary conversions only -- the FPU is not needed after the initial conversion to create
+the key).
+<tr>
+<td align=left><code>SORT_U64</code>
+<td align=right><code>8</code>
+<td align=left>This constant is used as the KH.sortCmpCode (low-byte). This is similar to
+SORT_S64 but sorted as an unsigned 64-bit value.
+<tr>
+<td align=left><code>SORT_MIXED</code>
+<td align=right><code>9</code>
+<td align=left>This constant is used as the KH.sortCmpCode (low-byte).  This sortCmp code
+performs different conversions based on the field type.  For field type C, SORT_NLS is
+always used.  For N, F, and Y (for Y, see below), the values are converted to double
+(8-byte IEEE double FP) and sorted by that.  SORT_MIXED_* (binary) field types are sorted
+by their type (<em>eg</em>, SORT_MIXED_S64 is sorted by a signed 64-bit comparison).
+<tr>
+<td align=left><code>SORT_RESERVED_10_31</code>
+<td align=center><code>10-31</code>
+<td align=left>sortCmpCode values from 10 to 31 are reserved.  A sortCmpCode of 0 is not valid.
+<tr>
+<td align=left><code>SORT_USER_SORT_CMP_CODES</code>
+<td align=center><code>32-255</code>
+<td align=left>sortCmpCode values from 32 to 255 are for user supplied sortCmp routines.  How
+to use userSortCmp codes is described elsewhere in this supplement.
+<tr>
+<td align=left><code>SORT_MIXED_S16</code>
+<td align=center><code>'3'</code>
+<td align=left>This is a field type, the same way 'C', 'N', 'D', and so on are
+field types. This is binary field, holding a 16-bit signed value.  If used as a
+key or part of a key (<em>ie</em>, a key component) it must be sorted by
+<code>SORT_S16</code>, or <code>SORT_MIXED</code>. All binary field types are
+Bullet3-extended and are not available except in Bullet 3.
+<tr>
+<td align=left><code>SORT_MIXED_U16</code>
+<td align=center><code>'4'</code>
+<td align=left>This is a field type. This is similar to
+<code>SORT_MIXED_S16</code> but is unsigned.
+<tr>
+<td align=left><code>SORT_MIXED_S32</code>
+<td align=center><code>'5'</code>
+<td align=left>This is a field type. This is similar to
+<code>SORT_MIXED_S16</code> but is a 32-bit signed value.
+<tr>
+<td align=left><code>SORT_MIXED_U32</code>
+<td align=center><code>'6'</code>
+<td align=left>This is a field type. This is similar to
+<code>SORT_MIXED_S32</code> but is unsigned.
+<tr>
+<td align=left><code>SORT_MIXED_S64</code>
+<td align=center><code>'7'</code>
+<td align=left>This is a field type. This is similar to
+<code>SORT_MIXED_S32</code> but is a signed 64-bit value.
+<tr>
+<td align=left><code>SORT_MIXED_U64</code>
+<td align=center><code>'8'</code>
+<td align=left>This is a field type. This is similar to
+<code>SORT_MIXED_S64</code> but is unsigned.
+<tr>
+<td align=left><code>SORT_MIXED_DBL</code>
+<td align=center><code>'Y'</code>
+<td align=left>This is a field type. This is similar to
+<code>SORT_MIXED_S64</code> but is a binary IEEE 8-byte floating-point value.
+<tr>
+<td align=left><code>SORT_DUPS_ALLOWED</code>
+<td align=right><code>0x10000</code>
+<td align=left>This is a flag in the low-byte of the high-word of KH.sortCmpCode (bit16).
+When set, Bullet permits duplicate keys to exist in the index file.  Duplicate keys are
+differentiated by their record number.
+<tr>
+<td align=left><code>SORT_USE_ANSI_SET</code>
+<td align=right><code>0x20000</code>
+<td align=left>This is a flag in the low-byte of the high-word of KH.sortCmpCode (bit17).
+When set, Bullet will generate an ANSI-based sortTable when in Win32, or if it unable to
+determine the sort table to use, will use the internal codepage 1252 sort table (if this
+is not set, it would use the internal codepage 850 sort table if not otherwise able to
+get a sort table).
+<tr>
+<td align=left><code>LOCK_MODE_EXCLUSIVE</code>
+<td align=right><code>0</code>
+<td align=left>This is the standard locking mode.  The lock excludes any access to the locked
+region except when accessed by this handle.  The owning handle of the lock may read or write
+to the locked region.
+<tr>
+<td align=left><code>LOCK_MODE_SHARED</code>
+<td align=right><code>1</code>
+<td align=left>This is a special locking mode, supported on some systems.  The lock allows read
+access to the locked region by any other handle that has also locked the region in the same
+mode.  No writes are possible with a shared lock.  An outstanding shared lock on a file prevents
+that file from being locked with <code>LOCK_MODE_EXCLUSIVE</code> by any process.  Not until all
+shared locks are released may the file be locked in exclusive mode.
+<tr>
+<td align=left><code>LOCK_MODE_ATOMIC</code>
+<td align=right><code>2</code>
+<td align=left>This is a special locking mode, supported by OS/2.  This flag is typically
+not used, instead <code>LOCK_MODE_SH2EX</code> and <code>LOCK_MODE_EX2SH</code> should be used.
+<tr>
+<td align=left><code>LOCK_MODE_SH2EX</code>
+<td align=right><code>2</code>
+<td align=left>This is a special locking mode available on OS/2 systems.  It's a combination of
+<code>LOCK_MODE_EXCLUSIVE</code> and <code>LOCK_MODE_ATOMIC</code>, and is used to switch an
+outstanding shared lock to an exclusive lock.  The handle must already be locked (shared lock)
+for this mode to be used.  The atomic mode is a feature of the operating system, and it ensures
+that between the unlock of the current shared lock and the granting of the exclusive lock, no
+other process may steal away the lock.  In other words, this mode relocks the file from shared
+locking to exclusive locking.  No shared locks other than the one being switched may be active
+for this to succeed.
+<tr>
+<td align=left><code>LOCK_MODE_EX2SH</code>
+<td align=right><code>3</code>
+<td align=left>This is similar to <code>LOCK_MODE_SH2EX</code> but is used to switch from an
+outstanding exclusive lock to a shared lock.  No exclusive locks other than the one being
+switched may be active for this to succeed.
+<tr>
+<td align=left><code>BLTVAR_IFS</code>
+<td align=right><code>-4</code>
+<td align=left>This retrieves the default file system function pointers Bullet uses for file
+I/O.  Instead of using rcPtr as a pointer to a return code variable, use a pointer to a
+TBLT_AUXPACK structure.  On entry, you must set TBLT_AUXPACK.entries to at least 12 (the number
+of xio* members in the structure).  On exit, the TBLT_AUXPACK.xio* members will contain function
+pointers to the default file I/O routines.
+<tr>
+<td align=left><code>BLTVAR_DLLH</code>
+<td align=right><code>-3</code>
+<td align=left>This retrieves the module handle of the Bullet DLL.  This is a read-only item.
+<tr>
+<td align=left><code>BLTVAR_MAF</code>
+<td align=right><code>-2</code>
+<td align=left>This retrieves the number of memory frees that have been made by Bullet
+through its BltMemFree() routine.  This is a read-only item.
+<tr>
+<td align=left><code>BLTVAR_MAA</code>
+<td align=right><code>-1</code>
+<td align=left>This retrieves the number of memory allocations that have been made by Bullet
+through its BltMemAlloc() routine.  This is a read-only item.
+<tr>
+<td align=left><code>BLTVAR_VERSION</code>
+<td align=right><code>0</code>
+<td align=left>This returns a 32-bit pointer to the Bullet version string.  This is a
+read-only item.  This first item in the string is the Bullet version.  The example source,
+dynaload.c, shows how to parse the string.
+<tr>
+<td align=left><code>BLTVAR_MPNL</code>
+<td align=right><code>1</code>
+<td align=left>This is used to get or set the maximum pathname length.  It may be used by Bullet
+whenever the KH/DH.MPNL value is 0.  The default value varies by platform.
+<tr>
+<td align=left><code>BLTVAR_MPCL</code>
+<td align=right><code>2</code>
+<td align=left>This is used to get or set the maximum pathname component length.  It may be
+used by Bullet whenever the KH/DH.MPCL value is 0.  The default value varies by platform.
+<tr>
+<td align=left><code>BLTVAR_MPXL</code>
+<td align=right><code>3</code>
+<td align=left>This is used to get or set the maximum extension length.  It may be used by Bullet
+whenever the KH/DH.MPXL value is 0.  The default value varies by platform.
+<tr>
+<td align=left><code>BLTVAR_MFSF</code>
+<td align=right><code>4</code>
+<td align=left>This is used to get or set the guard size for maximum file size.  For example, if
+the file system being used allows a maximum file size of a 2GB, Bullet limits the actual file
+size to 2GB minus the value in this variable.  This is to ensure that a write or read won't
+wrap around for long record lengths.  This is normally set to 128 KB.
+<tr>
+<td align=left><code>BLTVAR_MARSV</code>
+<td align=right><code>10</code>
+<td align=left>This is used to get or set the number of bytes to reserve so that the Bullet
+reindex routine will not allocate all available memory.  The default value varies by platform.
+Also see <code>BLTVAR_MASZRX</code>.
+<tr>
+<td align=left><code>BLTVAR_MASZRX</code>
+<td align=right><code>11</code>
+<td align=left>This is used to get or set the maximum total number of bytes that the Bullet
+reindex routine can allocate.  The KH.MMUBR member can be checked after a reindex to find out
+the peak memory used by the reindex routine.  Also see <code>BLTVAR_MASZ</code>.
+<tr>
+<td align=left><code>BLTVAR_MASZ</code>
+<td align=right><code>12</code>
+<td align=left>This is used to get or set the maximum size of a single allocation request.
+For DOS and 16-bit builds, the default is 65,024 bytes.  For others, 128 KB.
+<p>
+Note: This size is also the file I/O size used by the reindex routine.  The reindex memory
+requested will largely be a multiple of this value, limited by <code>BLTVAR_MARSV</code>.
+<tr>
+<td align=left><code>BLTVAR_MCBSZ</code>
+<td align=right><code>13</code>
+<td align=left>This is used to get or set the buffer size used by <code>BltDataPack()</code>
+for memo I/O.
+<tr>
+<td align=left><code>BLTVAR_MCBMAM</code>
+<td align=right><code>14</code>
+<td align=left>This is used to get or set the memory allocation strategy (of BLTVAR_MCBSZ size)
+for memo record I/O in <code>BltDataPack()</code>, and is also used as the memory allocation
+strategy for <code>BltDataSort()</code>.
+<tr>
+<td align=left><code>CRYPTO_FROM_RECGET</code>
+<td align=right><code>1</code>
+<td align=left>This mode value is passed by Bullet when it calls your data Crypto() callback
+routine.  Your routine is to decrypt the record.  See the crypto.c source example for more.
+<tr>
+<td align=left><code>CRYPTO_FROM_RECADD</code>
+<td align=right><code>2</code>
+<td align=left>This mode value is passed by Bullet when it calls your data Crypto() callback
+routine.  Your routine is to encrypt the record.  See the crypto.c source example for more.
+<tr>
+<td align=left><code>CRYPTO_FROM_RECUPD</code>
+<td align=right><code>3</code>
+<td align=left>This mode value is passed by Bullet when it calls your data Crypto() callback
+routine.  Your routine is to encrypt the record.  See the crypto.c source example for more.
+<tr>
+<td align=left><code>CRYPTO_FROM_XRECADD</code>
+<td align=right><code>4</code>
+<td align=left>This mode value is passed by Bullet when it calls your data Crypto() callback
+routine.  Your routine is to decrypt the record.  See the crypto.c source example for more.
+<tr>
+<td align=left><code>CRYPTO_FROM_XRECUPD</code>
+<td align=right><code>5</code>
+<td align=left>This mode value is passed by Bullet when it calls your data Crypto() callback
+routine.  Your routine is to decrypt the record.  See the crypto.c source example for more.
+<tr>
+<td align=left><code>CRYPTO_FROM_KEYGET</code>
+<td align=right><code>16</code>
+<td align=left>This mode value is passed by Bullet when it calls your index Crypto() callback
+routine.  Your routine is to decrypt the key.  See the crypto.c source example for more.
+<tr>
+<td align=left><code>CRYPTO_FROM_KEYADD</code>
+<td align=right><code>32</code>
+<td align=left>This mode value is passed by Bullet when it calls your index Crypto() callback
+routine.  Your routine is to encrypt the key.  See the crypto.c source example for more.
+<tr>
+<td align=left><code>FROM_KEYADDBULK</code>
+<td align=right><code>160</code>
+<td align=left>This mode value is passed by Bullet when it calls your index Crypto() callback
+routine from the Bullet reindex routine.  Your routine is to encrypt all keys on all nodes.  See
+the crypto.c source example for more.
+<tr>
+<td align=left><code>OPENFLAGS_COMMIT</code>
+<td align=right><code>0x400000</code>
+<td align=left>This flag forces all writes to be written to disk immediately and for the
+directory entry to be updated.  This bypasses any lazy-write/write-behind features of the
+disk cache, and results in very slow performance (even slower than if there were no cache
+since the directory is also updated).  This does not flush Bullet file headers.  You should
+use the Bullet flush routines rather than this flag.  This flag is also know as
+OPENFLAGS_WRITE_THROUGH.
+<p>
+Bullet translates the OPENFLAGS_* to their corresponding platform flags, so you should only
+use these flags and not those specific to any platform.  All bits in the .asMode are
+passed down to the operating system file calls; the high word of .asMode is first right-shift
+8 bits, giving the .asMode value its normal 16-bit effective size.
+<tr>
+<td align=left><code>OPENFLAGS_NOCRIT</code>
+<td align=right><code>0x200000</code>
+<td align=left>This flag tells the operating system to pass back any critical disk errors,
+rather than calling its own critical error handler.  It's recommended that this flag always
+be used in the DH/KH.asMode bitflags value.  In OS/2 it is always set.
+<tr>
+<td align=left><code>OPENFLAGS_NOCACHE</code>
+<td align=right><code>0x100000</code>
+<td align=left>[OS/2] This flag specifies that the cache is to be bypassed.
+<tr>
+<td align=left><code>OPENFLAGS_FOURGB</code>
+<td align=right><code>0x100000</code>
+<td align=left>[FAT32] This flag specifies that the operating system allows file sizes up to
+4GB (rather than 2GB).
+<tr>
+<td align=left><code>OPENFLAGS_IO_RNDSEQ</code>
+<td align=right><code>0x030000</code>
+<td align=left>[OS/2] This flag specifies a cache hint that the file will be accessed mostly
+randomly, but with some sequential access.
+<tr>
+<td align=left><code>OPENFLAGS_IO_RND</code>
+<td align=right><code>0x020000</code>
+<td align=left>[NT, OS/2] This flag specifies a cache hint that the file will be accessed mostly
+randomly.
+<tr>
+<td align=left><code>OPENFLAGS_IO_SEQ</code>
+<td align=right><code>0x010000</code>
+<td align=left>[NT, OS/2] This flag specifies a cache hint that the file will be accessed mostly
+sequentially.
+<tr>
+<td align=left><code>OPENFLAGS_NOINHERIT</code>
+<td align=right><code>0x000080</code>
+<td align=left>This flag specifies that child processes do not inherit asMode.
+<tr>
+<td align=left><code>OPENFLAGS_DENY_NONE</code>
+<td align=right><code>0x000040</code>
+<td align=left>This flag specifies the sharing mode: No other opens will be denied.  This is
+the usually share mode, and allows access to be controlled by using region locks.
+<p>
+Note: One of the <code>OPENFLAGS_DENY_*</code> modes must be specified.
+<tr>
+<td align=left><code>OPENFLAGS_DENY_READ</code>
+<td align=right><code>0x000030</code>
+<td align=left>This flag specifies the sharing mode: All other opens that specify read access will
+be denied.
+<tr>
+<td align=left><code>OPENFLAGS_DENY_WRITE</code>
+<td align=right><code>0x000020</code>
+<td align=left>This flag specifies the sharing mode: All other opens that specify write access
+will be denied.
+<tr>
+<td align=left><code>OPENFLAGS_DENY_RW</code>
+<td align=right><code>0x000010</code>
+<td align=left>This flag specifies the sharing mode: All other opens that specify read and/or
+write access will be denied.  Could also be called DENY_ALL.
+<tr>
+<td align=left><code>OPENFLAGS_ACCESS_READ7</code>
+<td align=right><code>0x000004</code>
+<td align=left>[DOS7] This flag specifies the access mode:  The access is read-only, which means
+the handle may not be written to.
+<tr>
+<td align=left><code>OPENFLAGS_ACCESS_RW</code>
+<td align=right><code>0x000002</code>
+<td align=left>This flag specifies the access mode:  The access is read and/or write, which
+means the handle may be read from or written to.
+<tr>
+<td align=left><code>OPENFLAGS_ACCESS_WRITE</code>
+<td align=right><code>0x000001</code>
+<td align=left>This flag specifies the access mode:  The access is write-only, which means the
+handle may not be read from.
+<tr>
+<td align=left><code>OPENFLAGS_ACCESS_READ</code>
+<td align=right><code>0x000000</code>
+<td align=left>This flag specifies the access mode:  The access is read-only, which means the
+handle may not be written to.
+</table>
+<br>
+<br>
+<p>
+<center><font size=-1>All content Copyright &copy; 1999 Cornel Huth.  All rights reserved.</font></center>
+</body>
+</html>

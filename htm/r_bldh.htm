@@ -1,0 +1,65 @@
+<html>
+<head>
+<title>BltLockDataHeader</title>
+</head>
+<body>
+<h4>BltLockDataHeader</h4>
+<br>
+<a href="bltlock.htm">&lt;&nbsp;Prev</a>&nbsp;&nbsp;<a href="_toc.htm">TOC</a>&nbsp;&nbsp;<a href="r_buldh.htm">Next&nbsp;&gt;</a>
+<p>
+<pre>
+TBLT_RETC TBLT_ENTRY BltLockDataHeader(TBLT_DH *dhPtr,
+                                       ULONG mode,
+                                       ULONG timeout);
+
+
+ dhPtr          I:data file control structure
+ mode           I:lock type
+ timeout        I:timeout, in milliseconds
+
+</pre>
+This routine locks the data file's header.
+<p>
+The mode can be a combination of the following:
+<pre>
+ LOCK_MODE_EXCLUSIVE or LOCK_MODE_SHARED
+ LOCK_MODE_SH2EX or LOCK_MODE_EX2SH
+ LOCK_MODE_ATOMIC
+</pre>
+Atomic locks are only available on 32-bit OS/2.  Shared locks (and the
+<code>SH2EX</code> and <code>EX2SH</code>) are only available on 32-bit
+OS/2 and WinNT.  A shared lock is a read-only lock, where any process
+may read the file, but no process may write to it.
+<p>
+If the lock cannot be made before the timeout period ends the error
+<code>EXB_TIMEOUT</code> is returned.
+<p>
+At data file open, the open mode could have the flag,
+<pre>
+ FLAGS_READ_THROUGH_LOCK_BIT
+</pre>
+specified.  This is similar to a shared lock, in that any process
+may read the locked region by simply not attempting to lock the region before
+reading it.  However, there is no write protection unless the programmer
+attempts to lock the locked region before writing to it.  The optional
+lockix4.c and lockdata.c files cover this technique.  If you always attempt
+to lock the header before writing, you can ensure that only one write
+access is made at a time.  You must always follow up with a flush and
+unlock.
+<p>
+After locking, and before making any access to the data file, you must call
+<code>BltDataReadHeader()</code> to load the data file header from disk into
+TBLT_DH.  It's recommended that if <code>FLAGS_READ_THROUGH_LOCK_BIT</code> is
+set that you not write to the data file since the structure (the number of
+records) of the data file may change out-from-under other processes accessing
+this file at the same time.
+<p>
+<em>Returns:</em>&nbsp;Non-zero indicates an error, otherwise the data file
+header is locked.
+<br>
+<br>
+<br>
+<p>
+<center><font size=-1>All content Copyright &copy; 1999 Cornel Huth.  All rights reserved.</font></center>
+</body>
+</html>

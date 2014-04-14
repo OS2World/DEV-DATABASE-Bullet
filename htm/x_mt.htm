@@ -1,0 +1,163 @@
+<html>
+<head>
+<title>Multi/Threaded access</title>
+</head>
+<body>
+<h4>Multi/Threaded access</h4>
+<br>
+<a href="x_files.htm">&lt;&nbsp;Prev</a>&nbsp;&nbsp;<a href="_toc.htm">TOC</a>&nbsp;&nbsp;<a href="x_intl.htm">Next&nbsp;&gt;</a>
+<p>
+<h5>Sharing handles: using mutual-exclusion semaphores</h5>
+<p>
+Bullet 3 is thread-safe without any special actions needed so long as individual KH/DH header
+structures (hereafter called simply headers) are not shared among threads.  You can have any
+number of KH/DH structures in a thread's scope without any problems; you can even have one
+header (or KH/DH pair) per thread if you wanted.  It's when you share a single KH/DH structure
+among threads, which is not necessary at all, that you need to take precautions.
+<p>
+To share headers among threads requires serializing the access to those headers.  The
+KH/DH.mutexHandle member may be used to store a mutual-exclusion (mutex) semaphore handle
+for those headers that are shared.  Bullet itself does not create, nor request, nor use
+semaphores itself with regard to (your) KH/DH data structures.
+<p>
+As an example of why you may need to use a mutex, consider the following:  let's say thread #2
+opens a KH/DH pair.  Most I/O to/from these headers are from this thread.  Let us say another
+thread, thread #3, is used periodically to check that status of this KH/DH pair.  Given this,
+here's a possible scenario:
+<p>
+Scenario #1
+<p>
+It's possible that an operation performed by thread#2 may be in the middle of its job, and so
+have the headers (KH/DH) in an inconsistent state as seen by everyone but itself.  If during
+this state, thread #3 comes along and is allowed unrestricted access to the headers when the
+headers are in this state, thread #3 will not see the true state of the headers.
+<p>
+What needs to be done is to serialize access to the headers.  One way to do this is with a
+mutex.  This mutex would be created at program-startup, for example, and its handle could be
+stored in KH/DH.mutexHandle (or any place the programmer would want it -- Bullet itself does
+not use the mutex handle) for later use.  While the program is running, each time thread #2
+wants access to the file -- just before it starts a Bullet operation on this KH/DH pair -- it
+requests ownership of the mutex.  Not until it is granted ownership does thread #2 begin its
+access of KH/DH.  Now, while thread #2 is busy, thread #3 wants to access the KH/DH structure
+so it requests ownwership of the mutex.  Since thread #2 currently owns the mutex, thread #3
+has to wait until the mutex becomes available (when thread #2 releases it).  This token-passing
+scheme (mutex) serializes access to the shared resource, the KH/DH headers.
+<p>
+You can use the same mutex handle for related KH/DH headers (<em>eg</em>, if you have 3 index
+files indexing one DBF, you can use one mutex to control access to the three KH structures, and
+the\ one DH structure), or you can use separate mutex handles for each header structure
+(<em>ie</em>, for each handle).  You could even use a single common mutex handle for <em>all </em>
+headers, but that has the downside of preventing access to all those headers when you only want
+access to one header.  Again, KH/DH.mutexHandle is just a convenient location for you to store
+your mutex handle; you can store it anywhere you want since Bullet does not use it itself.
+<p>
+For more on mutual-exclusion semaphores check with your operating system documentation.  For
+non-multitasking operating system, serialization is not needed since all operations will
+complete before another starts, ensuring serialization.  Windows 3.1x is an example of a
+non-multitasking operating system.  For 32-bit Windows, see CreateMutex(), WaitForSingleObject(),
+ReleaseMutex(), and CloseHandle() in your Win32 API documentation for more on mutual exclusion
+semaphores and their use.
+<p>
+<h5>Sharing handles: locking</h5>
+<p>
+Even if you know your process won't be stepping over itself with regard to writing to and
+reading from its files, another process running at the same time, either on your local
+machine or on the network somewhere, may want to write to the very same files you want to
+access.  One easy solution is to just open the files for exclusive access
+(<code>OPENFLAGS_DENY_RW</code>).  The problem is that no one but you can access this file
+for as long as you have it open -- if you can even get it open since someone else may have
+done the same thing.
+<p>
+Instead of doing that, the preferred technique is to use <code>OPENFLAGS_DENY_NONE</code>.
+This sharing mode lets anyone open the file so long as they too open using the same
+sharing mode.  But that's just a start.  Now, anyone can write or read the file, at any
+time.  Obviously that won't do since you can't allow everyone to write to the file at the
+same time -- you'll get a mush (one overwrites another, which overwrites...).
+<p>
+As with controlling access to a KH/DH structure with a semaphore, you control access to
+a file with a lock.  Not a open lock that you specify for as long as the file is open
+(already discussed above and dismissed), but a region lock that you specify only for
+as long as you need direct access to the file.  For example, if you need to write to
+the file, lock it first, do any prerequisite read, then write if needed, then unlock.
+While the lock is in place, no other process anywhere can access that which you have
+locked, even to read it (allowing it to be read from another process while still being
+actively written to by this process is not a good idea).  The only access to a locked
+file is through the handle that has the lock in place.
+<p>
+Note: Bullet has a special mode to allow read-through locks, but this technique is not
+recommened.  In addition, some operating systems have a read-only access lock, also known
+as a <em>shared lock</em>.  This lock mode lets all processes that have such a lock on
+the file read from that file, but no process may write to that file so long as at least
+one process has a shared lock active on the file.  Once all shared locks are released, a
+process may change the lock to exclusive (and only one process will succeed at that, by
+definition) so that that process may write to the file.  <em>Allowing multiple-concurrent
+access to a file without using locks is an invitation to file corruption</em>.
+<p>
+Bullet includes a high-level lock routine, BltLockEx(), which simplifies locking -- just tell
+it what handles to lock, for any number of KH/DH structures, and it locks all of them if it
+can, or locks nothing if it can't lock them all (it's a transaction lock).  Repeat the call
+until it succeeds.
+<p>
+Bullet memo handles are not explictly locked by any Bullet calls.  Bullet relies instead
+on the DBF lock being sufficient to control access since access through Bullet to a memo
+file is always made through its DBF DH structure.  So, if DH.handle is locked, that effectively
+prevents others from accessing DH.memoHandle since they won't succeed in locking DH.handle
+(which the other process would do to access the memo file).  Nevertheless, you can issue a
+low-level lock if you have special needs (use BltLockFile(), or an operating system lock
+call, on the handle DH.memoHandle).
+<p>
+Always unlock once you no longer need the lock, and as soon as possible.
+<p>
+<h5>Sharing handles: atomic key access</h5>
+<p>
+Another aspect of handling multithreaded access is the index file.  Bullet operates at the
+handle level, one KH (or DH) per open handle.  Any access to a file handle results in that
+handle's KH (or DH) being updated.  Even with the above precautions taken, access to an index
+handle (KH.handle) from more than one thread -- or even in the same thread if you have more
+than one section of code accessing the handle -- may result in the internal key position
+changing from where it was last known to be.
+<p>
+For example, let's say thread #2 is processing a given KH.handle in key order, moving through
+all keys and records one at a time.  A BltIx4GetNext() does this just fine.  Now consider
+thread #3, which is sharing this KH structure (handle), accessing this index file, say,
+using by BltIx4GetLast().  If thread #3 positioned the index file to the last key (as in
+this example), then the very next access that thread #2 makes to this handle will report an
+end-of-file, regardless of the position thread #2 last was in the file handle (thread #2 was
+using GetNext, so it may have been anywhere).  The reason for this is that, as far as the
+KH structure is concerned, the last accessed key for this handle was indeed the very last
+key, as positioned to by the BltIx4GetLast() routine called from thread #3.
+<p>
+To counter such conditions, Bullet allows atomic key access to be specified when an index
+file is opened (or at any time, by changing KH.flags).  When atomic key access is active,
+Bullet no longer starts a Next/Prev operation based on the internal KH handle position,
+but instead it starts at the key that is specified in the keyBufferPtr (and record number
+in recNoPtr) passed to the Next/Prev operation.
+<p>
+In the case above, the last BltIx4GetNext() call made by thread #2 sets the key buffer to
+the (next) key and (next) record number automatically.  Therefore, with atomic key access
+enabled, the next time BltIx4GetNext() is called by thread #2, Bullet will access the key
+located in the keyBufferPtr/recNoPtr pair first (<em>ie</em>, positioning the handle to the
+key position last known by thread #2), and then (whether that key/recNo pair was found or
+even if it was not found), performs a GetNext operation.  This is an atomic access.  This
+still requires a mutex (discussed above) to serialize the access to this handle, since
+thread #3 could interrupt thread #2 after thread #2 located to its starting key/recNo pair,
+but before Bullet could complete the GetNext.
+<p>
+Another case where atomic key access is useful is after BltIx4Update() is used.  If the
+key changes due to the update, that index (with respect to its KH structure) is repositioned
+to that new key.  If you need to keep the old position, such as when processing a file in
+index-order, then using atomic key access is just what the doctor orders.
+<p>
+If more than one thread requires access to a file, you can consider opening the file anew in
+the other thread, using a separate KH/DH header structure, instead of sharing an open.  This
+lets you access the file (protected by locking) without having to use atomic key access, which
+is a bit slower than not using atomic key access.  Since a new open returns a new file handle,
+you can intermix access to the same file among threads since Bullet manages access/last-position
+by handle (<ie>ie</em>, by KH/DH headers).
+<p>
+<br>
+<br>
+<p>
+<center><font size=-1>All content Copyright &copy; 1999 Cornel Huth.  All rights reserved.</font></center>
+</body>
+</html>

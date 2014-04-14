@@ -1,0 +1,36 @@
+<html>
+<head>
+<title>BltIx4StoreKey</title>
+</head>
+<body>
+<h4>BltIx4StoreKey</h4>
+<br>
+<a href="r_bidk.htm">&lt;&nbsp;Prev</a>&nbsp;&nbsp;<a href="_toc.htm">TOC</a>&nbsp;&nbsp;<a href="r_biek.htm">Next&nbsp;&gt;</a>
+<p>
+<pre>
+TBLT_RETC TBLT_ENTRY BltIx4StoreKey(TBLT_KH *khPtr,
+                                    VOID *keyBufferPtr,
+                                    ULONG recNo);
+
+
+ khPtr          I:index file control structure
+ keyBufferPtr   I:key to store
+ recNo          I:recNo to attach to key
+
+</pre>
+This routine stores the key/recNo pair into the index file.
+<p>
+The recNo value is typically the value returned from <code>BltDataAddRecord()</code>.
+<p>
+The recNo should not be 0 when using DBF data files since there is no record number 0.
+<p>
+See <code>BltIx4Insert()</code> for another method of adding keys.
+<p>
+<em>Return:</em>&nbsp;Non-zero indicates an error, otherwise the key/recNo is stored.
+<br>
+<br>
+<br>
+<p>
+<center><font size=-1>All content Copyright &copy; 1999 Cornel Huth.  All rights reserved.</font></center>
+</body>
+</html>

@@ -1,0 +1,46 @@
+<html>
+<head>
+<title>BltMemoGetSize</title>
+</head>
+<body>
+<h4>BltMemoGetSize</h4>
+<br>
+<a href="r_bmg.htm">&lt;&nbsp;Prev</a>&nbsp;&nbsp;<a href="_toc.htm">TOC</a>&nbsp;&nbsp;<a href="r_bmu.htm">Next&nbsp;&gt;</a>
+<p>
+<pre>
+TBLT_RETC TBLT_ENTRY BltMemoGetSize(TBLT_DH *dhPtr,
+                                    ULONG memoNo,
+                                    ULONG *availLinkPtr,
+                                    ULONG *memoSizePtr);
+
+
+ dhPtr          I:data file control structure
+ memoNo         I:memo number to get
+ availLinkPtr   O:availLink value
+ memoSizePtr    O:size of memo data, in bytes
+
+</pre>
+This routine returns the number of bytes stored at memoNo.
+<p>
+For active memos, the availLink value is always 0x8FFFF (or the value
+in TBLT_DH.memoInUseFlag).  The memo size is the size that was set by the
+programmer when storing or updating the memo record.
+<p>
+If the memo is deleted the availLink is a memo block number to the next
+available memo block in the reuse memo avail chain.  The size is the
+total number of bytes that the deleted block(s) uses, including the eight
+bytes of overhead of the first block.  This size is always a multiple
+of the TBLT_DH.memoBlockSize (default=512) in Bullet 3. (Bullet 2 stored deleted
+memo sizes differently; see the supplemental documentation on how to manage
+Bullet 2 memo files with deleted memos in them.)  The return code is
+<code>EXB_MEMO_DELETED</code>.
+<p>
+<em>Return:</em>&nbsp;Non-zero indicates an error (or a deleted memo), otherwise
+the availLink and size are returned.
+<br>
+<br>
+<br>
+<p>
+<center><font size=-1>All content Copyright &copy; 1999 Cornel Huth.  All rights reserved.</font></center>
+</body>
+</html>

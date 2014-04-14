@@ -1,0 +1,51 @@
+<html>
+<head>
+<title>BltMemoUpdate</title>
+</head>
+<body>
+<h4>BltMemoUpdate</h4>
+<br>
+<a href="r_bmgs.htm">&lt;&nbsp;Prev</a>&nbsp;&nbsp;<a href="_toc.htm">TOC</a>&nbsp;&nbsp;<a href="bltmemo.htm">Next&nbsp;&gt;</a>
+<p>
+<pre>
+TBLT_RETC TBLT_ENTRY BltMemoUpdate(TBLT_DH *dhPtr,
+                                   ULONG *memoNoPtr,
+                                   ULONG startOffset,
+                                   ULONG bytesToWrite,
+                                   VOID *bufferPtr);
+
+
+ dhPtr          I:data file control structure
+ memoNoPtr      IO:memo number to update/new memo number
+ startOffset    I:where to start update (first byte=0)
+ bytesToWrite   I:bytes to write, or new (smaller) size to size to
+ bufferPtr      I:data to update memo
+
+</pre>
+This routine updates an existing memo by overwriting data, adding new data,
+or shrinking the current size.
+<p>
+If the update fits wholly in the current memo space, the new data simply
+overwrites the old (from startOffset for bytesToWrite).
+<p>
+If the update requires more memo space than what the memo currently has,
+the old memo data is moved to a new location that is large enough for both
+it and the new data.  The old memo data is then deleted.  If this is done,
+the old memoNo is no longer valid; a new memoNo is returned in memoNoPtr.
+You must use this new memoNo to update the memo field number in the DBF data
+record (which still has the old memo number).
+<p>
+If bufferPtr is 0 then the size of the memo is shrunk to that specified in
+bytesToWrite.  bytesToWrite must be less than the current memo size or
+error <code>EXB_MEMO_IS_SMALLER</code> is returned.  Any memo space that
+can be made available from the resizing is put on the avail chain, for
+later reuse.
+<p>
+<em>Return:</em>&nbsp;Non-zero indicates an error, otherwise the memo is updated.
+<br>
+<br>
+<br>
+<p>
+<center><font size=-1>All content Copyright &copy; 1999 Cornel Huth.  All rights reserved.</font></center>
+</body>
+</html>

@@ -1,0 +1,180 @@
+<html>
+<head>
+<title>Bullet 3.0 [BASIC 16-bit (b3msbas.bi)]</title>
+</head>
+<body>
+<h5>File: b3msbas.bi</h5>
+<br>
+<a href="i_b.htm">&lt;&nbsp;Prev</a>&nbsp;&nbsp;<a href="_toc.htm">TOC</a>&nbsp;&nbsp;<a href="i_b_msbd.htm">Next&nbsp;&gt;</a>
+<pre>
+'
+'  b3msbas.bi
+'  1-Jan-1999
+'  Bullet 3 Basic main include for ms basic7/vbdos
+'  Copyright (C)1999 Cornel Huth        http://40th.com/
+'
+'  - this includes the files b3msbdef.bi and b3msbtyp.bi
+'    -------------------------------------------------------------------------------------------
+'  - all pointers are 32-bit (seg:off for RM, sel:off for 16-bit PM)
+'    -------------------------------------------------------------------------------------------
+'  - strings are passed by 32-bit pointer so varlen$ must be converted to fixed-length strings
+'    for Basic and VARPTR/VARSEG used on those fixed-length strings to pass these addresses as
+'    a long, and by-value
+'     - - - - - - - - - -
+'    NOTE: The above note also includes TYPE xyz AS STRING * n; you cannot use a typevar.strg 
+'          if .strg is any string type (including fixed-length) since the compiler (bc.exe) 
+'          converts this to var-length string and then passes the SEG address of the descriptor,
+'          which is not the correct pointer needed by Bullet
+'
+'          Protos below generally use "BYVAL someBufferPtr AS LONG" to describe pointer arguments
+'          when the pointer is to an unknown type. Protos use "SEG var&amp;" or "SEG rec AS xxx"
+'          when dealing with pointers to known types (or known to be a TYPE, such as recordPtr).
+'          In all cases, the pointer is to point to the actual data and not a basic descriptor
+'          (see your compiler manual for the definition of a descriptor, and how BASIC uses them).
+'
+'          Here is one way to calculate the 32-bit pointer of a non-(fixed-len)string:
+'
+'             passFarPtr&amp; = (VARSEG(someVar) * 65536) + (VARPTR(someVar))
+'
+'          If "someVar" is not a static variable it's possible BASIC will move it the next
+'          time a basic statement or function is called, so recalulate passFarPtr after calling
+'          any basic statement/function and before using it again to pass to Bullet
+'
+'          See the .bas examples for more tips
+'
+'  - the /Ot compiler switch (quick call) should not be used for modules that include callback functions
+'  - ss==ds==DGROUP assumed in b3dos16.lib and b3os216.lib version and required for Basic callbacks
+
+DEFINT A-Z  'recommended
+
+' Note:  In b3msbtyp.bi, the maximum DBF fields has been set to 32 and the node size to 512.
+' These can be changed to other valid values, but in Basic they must be hard-coded at compile-time.
+
+<a href="i_b_msbd.htm">REM $INCLUDE: 'b3msbdef.bi' </a>
+<a href="i_b_msbt.htm">REM $INCLUDE: 'b3msbtyp.bi' </a>
+
+DECLARE FUNCTION BltBasicSetOnExit%(nada%)
+DECLARE FUNCTION BltBasicGetAddrForCallBackData% (SEG cbDataPtr&amp;)
+DECLARE FUNCTION BltBasicGetAddrForCallBackIx4% (SEG cbIx4Ptr&amp;)
+DECLARE FUNCTION BltBasicGetAddrForUserSortCmp% (SEG uscPtr&amp;)
+DECLARE FUNCTION BltBasicGetAddrForCryptoData% (SEG cryptoDataPtr&amp;)
+DECLARE FUNCTION BltBasicGetAddrForCryptoIx4% (SEG cryptoIx4Ptr&amp;)
+DECLARE FUNCTION BltBasicGetAddrForBuildKey% (SEG buildKeyPtr&amp;)
+DECLARE FUNCTION BltBasicGetAddrForParseExp% (SEG parseExpPtr&amp;)
+
+DECLARE FUNCTION BltDataInfoFile% CDECL (BYVAL filenamePtr AS LONG, BYVAL asMode&amp;, SEG dbfInfoPtr AS BLTDBFINFO, SEG noFieldsPtr&amp;, BYVAL zero&amp;)
+DECLARE FUNCTION BltDataCreateFile% CDECL (BYVAL fileID&amp;, BYVAL fields&amp;, SEG fieldListPtr AS BLTFD, BYVAL filenamePtr AS LONG, BYVAL maMode&amp;, BYVAL zero&amp;)
+DECLARE FUNCTION BltDataOpenFile% CDECL (SEG dhPtr AS BLTDH, BYVAL mode&amp;)
+DECLARE FUNCTION BltDataCloseFile% CDECL (SEG dhPtr AS BLTDH)
+DECLARE FUNCTION BltDataFlushHeader% CDECL (SEG dhPtr AS BLTDH)
+DECLARE FUNCTION BltDataCopyHeader% CDECL (SEG dhPtr AS BLTDH, BYVAL filenamePtr AS LONG)
+DECLARE FUNCTION BltDataReadHeader% CDECL (SEG dhPtr AS BLTDH)
+DECLARE FUNCTION BltDataZapHeader% CDECL (SEG dhPtr AS BLTDH)
+DECLARE FUNCTION BltDataAddRecord% CDECL (SEG dhPtr AS BLTDH, SEG recordPtr AS ANY, SEG recNoPtr&amp;)
+DECLARE FUNCTION BltDataDebumpRecord% CDECL (SEG dhPtr AS BLTDH, BYVAL recNo&amp;)
+DECLARE FUNCTION BltDataMarkRecord% CDECL (SEG dhPtr AS BLTDH, BYVAL recNo&amp;, BYVAL tagChar&amp;)
+DECLARE FUNCTION BltDataUpdateRecord% CDECL (SEG dhPtr AS BLTDH, BYVAL recNo&amp;, SEG recordPtr AS ANY)
+DECLARE FUNCTION BltDataGetRecord% CDECL (SEG dhPtr AS BLTDH, BYVAL recNo&amp;, SEG recordPtr AS ANY)
+DECLARE FUNCTION BltDataSort% CDECL (BYVAL indexnamePtr&amp;, BYVAL filenamePtr AS LONG, BYVAL newFilenamePtr AS LONG, BYVAL cbPtr&amp;, BYVAL zero&amp;)
+DECLARE FUNCTION BltDataPack% CDECL (BYVAL filenamePtr AS LONG, BYVAL newFilenamePtr AS LONG, BYVAL cbPtr&amp;, BYVAL zero&amp;)
+
+DECLARE FUNCTION BltMemoCreateFile% CDECL (SEG dhPtr AS BLTDH)
+DECLARE FUNCTION BltMemoCloseFile% CDECL (SEG dhPtr AS BLTDH)
+DECLARE FUNCTION BltMemoOpenFile% CDECL (SEG dhPtr AS BLTDH)
+DECLARE FUNCTION BltMemoFlushHeader% CDECL (SEG dhPtr AS BLTDH)
+DECLARE FUNCTION BltMemoReadHeader% CDECL (SEG dhPtr AS BLTDH)
+DECLARE FUNCTION BltMemoAdd% CDECL (SEG dhPtr AS BLTDH, BYVAL bytesToSize&amp;, BYVAL bytesToWrite&amp;, BYVAL bufferPtr AS LONG, SEG memoNoPtr&amp;, BYVAL rsvFlag&amp;)
+DECLARE FUNCTION BltMemoDelete% CDECL (SEG dhPtr AS BLTDH, BYVAL memoNo&amp;)
+DECLARE FUNCTION BltMemoGet% CDECL (SEG dhPtr AS BLTDH, BYVAL memoNo&amp;, BYVAL startOffset&amp;, SEG bytesToReadPtr&amp;, BYVAL bufferPtr AS LONG)
+DECLARE FUNCTION BltMemoGetSize% CDECL (SEG dhPtr AS BLTDH, BYVAL memoNo&amp;, SEG availLinkPtr&amp;, SEG memoSizePtr&amp;)
+DECLARE FUNCTION BltMemoUpdate% CDECL (SEG dhPtr AS BLTDH, SEG memoNoPtr&amp;, BYVAL startOffset&amp;, BYVAL bytesToWrite&amp;, BYVAL bufferPtr AS LONG)
+
+DECLARE FUNCTION BltIx4InfoFile% CDECL (BYVAL filenamePtr AS LONG, BYVAL asMode&amp;, SEG ix4InfoPtr AS BLTIX4INFO, BYVAL zero&amp;)
+DECLARE FUNCTION BltIx4CreateFile% CDECL (BYVAL nodeSz&amp;, BYVAL sortCC&amp;, BYVAL cp&amp;, BYVAL cc&amp;, BYVAL stPtr AS LONG, BYVAL kxPtr as LONG, SEG dhPtr AS BLTDH, BYVAL filenamePtr AS LONG, BYVAL zero&amp;, BYVAL maMode&amp;, BYVAL zero2&amp;)
+DECLARE FUNCTION BltIx4OpenFile% CDECL (SEG khPtr AS BLTKH, BYVAL mode&amp;)
+DECLARE FUNCTION BltIx4CloseFile% CDECL (SEG khPtr AS BLTKH)
+DECLARE FUNCTION BltIx4FlushHeader% CDECL (SEG khPtr AS BLTKH)
+DECLARE FUNCTION BltIx4CopyHeader% CDECL (SEG khPtr AS BLTKH, BYVAL filenamePtr AS LONG)
+DECLARE FUNCTION BltIx4ReadHeader% CDECL (SEG khPtr AS BLTKH)
+DECLARE FUNCTION BltIx4ZapHeader% CDECL (SEG khPtr AS BLTKH)
+DECLARE FUNCTION BltIx4KeyForRecord% CDECL (SEG khPtr AS BLTKH, BYVAL keyBufferPtr AS LONG, BYVAL recNo&amp;, SEG recordPtr AS ANY)
+DECLARE FUNCTION BltIx4DeleteKey% CDECL (SEG khPtr AS BLTKH, BYVAL keyBufferPtr AS LONG, BYVAL recNo&amp;)
+DECLARE FUNCTION BltIx4StoreKey% CDECL (SEG khPtr AS BLTKH, BYVAL keyBufferPtr AS LONG, BYVAL recNo&amp;)
+DECLARE FUNCTION BltIx4EqualKey% CDECL (SEG khPtr AS BLTKH, BYVAL keyBufferPtr AS LONG, SEG recNoPtr&amp;)
+DECLARE FUNCTION BltIx4EqualOrGreaterKey% CDECL (SEG khPtr AS BLTKH, BYVAL keyBufferPtr AS LONG, SEG recNoPtr&amp;)
+DECLARE FUNCTION BltIx4EqualOrLesserKey% CDECL (SEG khPtr AS BLTKH, BYVAL keyBufferPtr AS LONG, SEG recNoPtr&amp;)
+DECLARE FUNCTION BltIx4FirstKey% CDECL (SEG khPtr AS BLTKH, BYVAL keyBufferPtr AS LONG, SEG recNoPtr&amp;)
+DECLARE FUNCTION BltIx4LastKey% CDECL (SEG khPtr AS BLTKH, BYVAL keyBufferPtr AS LONG, SEG recNoPtr&amp;)
+DECLARE FUNCTION BltIx4NextKey% CDECL (SEG khPtr AS BLTKH, BYVAL keyBufferPtr AS LONG, SEG recNoPtr&amp;)
+DECLARE FUNCTION BltIx4PrevKey% CDECL (SEG khPtr AS BLTKH, BYVAL keyBufferPtr AS LONG, SEG recNoPtr&amp;)
+
+DECLARE FUNCTION BltLockEx% CDECL (SEG lockExPtr AS BLTLOCKEX, SEG slotPtr&amp;, BYVAL timeout&amp;)
+DECLARE FUNCTION BltUnlockEx% CDECL (SEG lockExPtr AS BLTLOCKEX, SEG slotPtr&amp;)
+DECLARE FUNCTION BltLockDataHeader% CDECL (SEG dhPtr AS BLTDH, BYVAL mode&amp;, BYVAL timeout&amp;)
+DECLARE FUNCTION BltUnlockDataHeader% CDECL (SEG dhPtr AS BLTDH)
+DECLARE FUNCTION BltLockDataRecord% CDECL (SEG dhPtr AS BLTDH, BYVAL mode&amp;, BYVAL recNoStart&amp;, BYVAL recCount&amp;, BYVAL timeout&amp;)
+DECLARE FUNCTION BltUnlockDataRecord% CDECL (SEG dhPtr AS BLTDH, BYVAL recNoStart&amp;, BYVAL recCount&amp;)
+DECLARE FUNCTION BltLockIx4File% CDECL (SEG khPtr AS BLTKH, BYVAL mode&amp;, BYVAL timeout&amp;)
+DECLARE FUNCTION BltUnlockIx4File% CDECL (SEG khPtr AS BLTKH)
+
+DECLARE FUNCTION BltGetVar&amp; CDECL (BYVAL index&amp;, SEG rcPtr&amp;) 'AS LONG
+DECLARE FUNCTION BltSetVar% CDECL (SEG valPtr&amp;, BYVAL index&amp;)
+
+DECLARE FUNCTION BltIx4Insert% CDECL (SEG khPtr AS BLTKH, BYVAL keyBufferPtr AS LONG, SEG recNoPtr&amp;, SEG recordPtr AS ANY, SEG actionPtr&amp;)
+DECLARE FUNCTION BltIx4InsertEx% CDECL (SEG iuexPtr AS BLTIUEX, SEG slotPtr&amp;)
+DECLARE FUNCTION BltIx4Update% CDECL (SEG khPtr AS BLTKH, BYVAL keyBufferPtr AS LONG, BYVAL recNo&amp;, SEG newRecPtr AS ANY, SEG actionPtr&amp;)
+DECLARE FUNCTION BltIx4UpdateEx% CDECL (SEG iuexPtr AS BLTIUEX, SEG slotPtr&amp;, BYVAL maMode&amp;)
+DECLARE FUNCTION BltIx4GetFirst% CDECL (SEG khPtr AS BLTKH, BYVAL keyBufferPtr AS LONG, SEG recNoPtr&amp;, SEG recordPtr AS ANY)
+DECLARE FUNCTION BltIx4GetNext% CDECL (SEG khPtr AS BLTKH, BYVAL keyBufferPtr AS LONG, SEG recNoPtr&amp;, SEG recordPtr AS ANY)
+DECLARE FUNCTION BltIx4GetPrev% CDECL (SEG khPtr AS BLTKH, BYVAL keyBufferPtr AS LONG, SEG recNoPtr&amp;, SEG recordPtr AS ANY)
+DECLARE FUNCTION BltIx4GetLast% CDECL (SEG khPtr AS BLTKH, BYVAL keyBufferPtr AS LONG, SEG recNoPtr&amp;, SEG recordPtr AS ANY)
+DECLARE FUNCTION BltIx4GetEqual% CDECL (SEG khPtr AS BLTKH, BYVAL keyBufferPtr AS LONG, SEG recNoPtr&amp;, SEG recordPtr AS ANY)
+DECLARE FUNCTION BltIx4GetEqualOrGreater% CDECL (SEG khPtr AS BLTKH, BYVAL keyBufferPtr AS LONG, SEG recNoPtr&amp;, SEG recordPtr AS ANY)
+DECLARE FUNCTION BltIx4GetEqualOrLesser% CDECL (SEG khPtr AS BLTKH, BYVAL keyBufferPtr AS LONG, SEG recNoPtr&amp;, SEG recordPtr AS ANY)
+DECLARE FUNCTION BltFuncIx4Reindex% CDECL (SEG khPtr AS BLTKH, BYVAL workFilePtr AS LONG, BYVAL nodePackPct&amp;, BYVAL keyBufferPtr AS LONG, SEG recNoPtr&amp;)
+DECLARE FUNCTION BltFuncIx4SortCmp% CDECL (SEG khPtr AS BLTKH, BYVAL arg1ptr AS LONG, BYVAL arg2ptr AS LONG, BYVAL hvBufferPtr AS LONG, BYVAL zero&amp;)
+
+DECLARE FUNCTION BltWriteAtFile% CDECL (BYVAL handle&amp;, SEG bytesPtr&amp;, BYVAL bufferPtr AS LONG, SEG offsetPtr&amp;, BYVAL zero&amp;)
+DECLARE FUNCTION BltReadAtFile% CDECL (BYVAL handle&amp;, SEG bytesPtr&amp;, BYVAL bufferPtr AS LONG, SEG offsetPtr&amp;, BYVAL zero&amp;)
+DECLARE FUNCTION BltCloseFile% CDECL (SEG handlePtr&amp;, BYVAL zero&amp;)
+DECLARE FUNCTION BltCreateDir% CDECL (BYVAL dirnamePtr AS LONG, BYVAL zero&amp;)
+DECLARE FUNCTION BltCreateFile% CDECL (BYVAL filenamePtr AS LONG, BYVAL zero&amp;)
+DECLARE FUNCTION BltDeleteFile% CDECL (BYVAL filenamePtr AS LONG, BYVAL zero&amp;)
+DECLARE FUNCTION BltMoveFile% CDECL (BYVAL currNamePtr AS LONG, BYVAL newNamePtr AS LONG, BYVAL zero&amp;)
+DECLARE FUNCTION BltLengthFile% CDECL (BYVAL handle&amp;, SEG lengthPtr&amp;, BYVAL zero&amp;)
+DECLARE FUNCTION BltOpenFile% CDECL (BYVAL filenamePtr AS LONG, BYVAL mode&amp;, SEG handlePtr&amp;, BYVAL zero&amp;)
+DECLARE FUNCTION BltReadFile% CDECL (BYVAL handle&amp;, SEG bytesPtr&amp;, BYVAL bufferPtr AS LONG, BYVAL zero&amp;)
+DECLARE FUNCTION BltSeekFile% CDECL (BYVAL handle&amp;, BYVAL mode&amp;, SEG posPtr&amp;, BYVAL zero&amp;)
+DECLARE FUNCTION BltUpdateDirEntry% CDECL (BYVAL handle&amp;, BYVAL zero&amp;)
+DECLARE FUNCTION BltWriteFile% CDECL (BYVAL handle&amp;, SEG bytesPtr&amp;, BYVAL bufferPtr AS LONG, BYVAL zero&amp;)
+DECLARE FUNCTION BltLockFile% CDECL (BYVAL handle&amp;, BYVAL mode&amp;, SEG lockOffsetPtr&amp;, SEG lockBytesPtr&amp;, BYVAL timeout&amp;, BYVAL zero&amp;)
+DECLARE FUNCTION BltIsRemote% CDECL (BYVAL handle&amp;, BYVAL drive&amp;, SEG isRemotePtr&amp;, SEG flagsPtr&amp;, BYVAL zero&amp;)
+
+DECLARE FUNCTION BltMemAlloc&amp; CDECL (BYVAL mode&amp;, BYVAL count&amp;, SEG rcPtr%, BYVAL zero&amp;) 'bmaPtr&amp; = BltMemAlloc(...)
+DECLARE FUNCTION BltMemFree% CDECL (BYVAL mode&amp;, SEG bmaPtr&amp;)                            'rc = BltMemFree(bmaPtr&amp;)
+DECLARE FUNCTION BltSetHandleCount% CDECL (SEG maxHandlesPtr&amp;)
+DECLARE FUNCTION BltTestCallBack% CDECL ALIAS "_ll_testCallBack" (SEG khPtr AS BLTKH)
+
+DECLARE FUNCTION BltGetSortSequenceTable% CDECL (BYVAL cpID&amp;, BYVAL ccID&amp;, BYVAL bufferPtr AS LONG, BYVAL charsetFlag&amp;)
+DECLARE FUNCTION BltGetCountryInfo% CDECL (SEG cpIDptr&amp;, SEG ccIDptr&amp;, BYVAL charsetFlag&amp;)
+DECLARE FUNCTION BltGetExtendedError% CDECL (SEG exRCptr%, SEG xeClassPtr&amp;, SEG xeActionPtr&amp;, SEG xeLocusPtr&amp;)
+DECLARE FUNCTION BltGetMemoryAvail&amp; CDECL (BYVAL mode&amp;) 'AS LONG
+DECLARE FUNCTION BltGetVersion% CDECL (SEG verDosPtr&amp;)
+DECLARE FUNCTION BltUpperCaseO% CDECL (BYVAL strgPtr AS LONG, BYVAL maxSize&amp;, BYVAL zero&amp;)
+DECLARE FUNCTION BltCloseMutexSem% CDECL (BYVAL handle&amp;)
+DECLARE FUNCTION BltCreateMutexSem% CDECL (BYVAL namePtr AS LONG, SEG handlePtr&amp;, BYVAL attrFlags&amp;, BYVAL stateFlag&amp;)
+DECLARE FUNCTION BltRequestMutexSem% CDECL (BYVAL handle&amp;, BYVAL timeout&amp;)
+DECLARE FUNCTION BltReleaseMutexSem% CDECL (BYVAL handle&amp;)
+
+DECLARE SUB BltMemSet CDECL (SEG strucPtr AS ANY, BYVAL value&amp;, BYVAL length&amp;)  'fast zero-fill of BLTKH/BLTDH
+DECLARE SUB BltMemCpy CDECL (BYVAL destPtr AS LONG, BYVAL srcPtr AS LONG, BYVAL length&amp;)
+
+' end b3msbas.bi
+</pre>
+<br>
+<br>
+<br>
+<br>
+<center><font size=-1>All content Copyright &copy; 1999 Cornel Huth.  All rights reserved.</font></center>
+</body>
+</html>

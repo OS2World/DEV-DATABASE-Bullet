@@ -1,0 +1,36 @@
+<html>
+<head>
+<title>BltIx4FirstKey</title>
+</head>
+<body>
+<h4>BltIx4FirstKey</h4>
+<br>
+<a href="r_bielk.htm">&lt;&nbsp;Prev</a>&nbsp;&nbsp;<a href="_toc.htm">TOC</a>&nbsp;&nbsp;<a href="r_bilk.htm">Next&nbsp;&gt;</a>
+<p>
+<pre>
+TBLT_RETC TBLT_ENTRY BltIx4FirstKey(TBLT_KH *khPtr,
+                                    VOID *keyBufferPtr,
+                                    ULONG *recNoPtr);
+
+
+ khPtr          I:index file control structure
+ keyBufferPtr   O:the first key
+ recNoPtr       O:recNo attached to the first key
+
+</pre>
+This routine gets the first key and its recNo.
+<p>
+This routine, like all <code>BltIx4*Key()</code> routines, gets only the
+key and recNo attached to that key.  With the recNo, the programmer can
+get the data record by using <code>BltDataGetRecord()</code>.  The
+<code>BltIx4Get*()</code> routines do this pairing automatically, and
+typically are the routines to use to access the database.
+<p>
+<em>Return:</em>&nbsp;Non-zero indicates an error, otherwise the first key/recNo is returned.
+<br>
+<br>
+<br>
+<p>
+<center><font size=-1>All content Copyright &copy; 1999 Cornel Huth.  All rights reserved.</font></center>
+</body>
+</html>

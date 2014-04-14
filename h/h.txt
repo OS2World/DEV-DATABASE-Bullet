@@ -1,0 +1,36 @@
+Bullet 3.0
+4-Oct-1999
+h.txt
+
+ vb/
+  b3vbwind.bas - Visual Basic header file (d at end=demo version)
+  b3xdemo.txt  - new VB support info
+
+  vb_qd/
+   b30demo1.bas    - simple VB demo (include b3vbwind.bas with it)
+   b30demo1.frm
+   b30demo1.vbp
+   b30demo1.vbw
+
+   exe/
+    b30demo1.exe   - requires VB6 runtime
+
+ c/
+  b3define.h  - defines, common to all platforms
+  b3defo32.h  - defines, OS/2-specific
+  b3defw16.h  - defines, Win16-specific
+  b3defw32.h  - defines, Win32-specific
+  b3os232.h   - OS/2 combined include
+  b3proto.h   - prototypes, common to all platforms
+  b3protod.h  - prototypes for run-time linking, common to all platforms
+  b3types.h   - types and structures, common to all platforms
+  b3win16.h   - Win16 combined include
+  b3win32.h   - Win32 combined include
+  blt3demo.h  - header used by most source modules in bd/*.c
+  bullet_3.h  - main Bullet header file, includes other headers as needed
+
+  o Your programs need only include bullet_3.h (with the correct platform
+    specifier defined prior to the #include line: BLT_WIN32, BLT_WIN16,...).
+
+  o All platforms' *.h are included here.  You may remove those platforms
+    you are not interested in.

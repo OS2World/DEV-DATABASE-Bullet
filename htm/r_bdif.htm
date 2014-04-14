@@ -1,0 +1,57 @@
+<html>
+<head>
+<title>BltDataInfoFile</title>
+</head>
+<body>
+<h4>BltDataInfoFile</h4>
+<br>
+<a href="bltdata.htm">&lt;&nbsp;Prev</a>&nbsp;&nbsp;<a href="_toc.htm">TOC</a>&nbsp;&nbsp;<a href="r_bdcf.htm">Next&nbsp;&gt;</a>
+<p>
+<pre>
+TBLT_RETC TBLT_ENTRY BltDataInfoFile(TBLT_FNCHAR *filenamePtr,
+                                     ULONG asMode,
+                                     TBLT_DBFINFO *dbfInfoPtr,
+                                     ULONG *noFieldsPtr,
+                                     TBLT_AUXPACK *apPtr);
+
+
+ filenamePtr    I:name of the file to get info on
+ asMode         I:access-sharing mode used for the temporary open
+ dbfInfoPtr     O:structure to store the DBF info
+ noFieldsPtr    O:variable to store the number of fields in the DBF
+ apPtr          I:auxiliary pack
+
+</pre>
+This routine should be called before opening a DBF where its structure is not known,
+especially to get the number of fields so that a TBLT_DH structure of correct size
+can be allocated for the actual open.
+<p>
+<code>asMode</code> is the access-sharing mode to open the file.  See
+<code>BltDataOpenFile()</code> for modes available.  The file is closed
+before this routine exits.
+<p>
+TBLT_DBFINFO is the same structure as the first 32 bytes of the TBLT_DH structure
+starting from fileID.  The number-of-fields data is used to determine what
+size the TBLT_DH allocation must be to hold both the TBLT_DH structure, which
+includes the first 32 bytes of the DBF file, and to hold all the 32-byte field
+descriptors (there is one field descriptor for each field in the DBF).  The
+total allocation size for TBLT_DH, required prior to calling <code>BltDataOpenFile()</code>, is
+<p>
+<pre>
+ sizeof(TBLT_DH) + ((noFields-1) * 32)
+</pre>
+<p>
+<code>apPtr</code> is the pointer to an optional auxiliary pack.  Set apPtr = 0 if there
+is no pack.  This pack lets you override the internal operating system IFS calls for this
+handle, and set IFS options, such as 64-bit file offsets.  See the supplemental
+documentation for details.  Once opened, apPtr is set in the TBLT_KH structure.
+<p>
+<em>Returns:</em>&nbsp;Non-zero indicates an error, otherwise the structure at dbfInfoPtr receives
+the DBF header, and noFieldsPtr is set to the number of fields.
+<br>
+<br>
+<br>
+<p>
+<center><font size=-1>All content Copyright &copy; 1999 Cornel Huth.  All rights reserved.</font></center>
+</body>
+</html>

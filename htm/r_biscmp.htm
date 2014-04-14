@@ -1,0 +1,39 @@
+<html>
+<head>
+<title>BltFuncIx4SortCmp</title>
+</head>
+<body>
+<h4>BltFuncIx4SortCmp</h4>
+<br>
+<a href="bltix4.htm">&lt;&nbsp;Prev</a>&nbsp;&nbsp;<a href="_toc.htm">TOC</a>&nbsp;&nbsp;<a href="r_birix.htm">Next&nbsp;&gt;</a>
+<p>
+<pre>
+TBLT_CMPC TBLT_CALLBACK BltFuncIx4SortCmp(TBLT_KH *khPtr,
+                                          VOID *arg1ptr,
+                                          VOID *arg2ptr,
+                                          UCHAR *hvBufferPtr,
+                                          ULONG hasRecNo);
+
+
+ khPtr          I:index file control structure
+ arg1ptr        I:string 1
+ arg2ptr        I:string 2
+ hvBufferPtr    I:set to 0
+ hasRecNo       I:set to 0
+
+</pre>
+This routine compares the data at arg1ptr with that at arg2ptr using the
+sort compare code in khPtr-&gt;sortCmpCode.
+<p>
+Use this function when you need to compare foreign key values with key values
+returned, especially for SORT_NLS, when strcmp() won't perform the job needed.
+<p>
+<em>Return:</em>&nbsp;less than 0 if <code>*arg1ptr &lt; *arg2ptr</code>; 0 if equal; greater
+than 0 if <code>*arg1ptr &gt; *arg2ptr</code>.
+<br>
+<br>
+<br>
+<p>
+<center><font size=-1>All content Copyright &copy; 1999 Cornel Huth.  All rights reserved.</font></center>
+</body>
+</html>

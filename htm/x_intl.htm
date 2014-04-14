@@ -1,0 +1,46 @@
+<html>
+<head>
+<title>International concerns</title>
+</head>
+<body>
+<h4>International concerns</h4>
+<br>
+<a href="x_mt.htm">&lt;&nbsp;Prev</a>&nbsp;&nbsp;<a href="_toc.htm">TOC</a>&nbsp;&nbsp;<a href="x_apack.htm">Next&nbsp;&gt;</a>
+<p>
+The DBF file format specifies that all data within it is to be in OEM character codes.  Ideally,
+this would be the printable character set between 32 and 127.  A further restriction is placed
+on field names:  they may include the characters from A to Z (uppercase), and the _.  Bullet
+itself has no such restrictions.
+<p>
+Nevertheless, you should be aware of how different character sets may affect your data, and
+how Bullet operates on that data.  One immediate concern is the difference between OEM (ASCII)
+data and Windows (pseudo-ANSI) data, and how they are mapped in any conversion process.  For
+example, the character in one codepage may map to a different character in another codepage.
+This can go so far as to prevent a filename from being recognized between machines (or even
+different codepages on the same machine).
+<p>
+When you create an index file, Bullet allows you to specify the international codepage to use.
+With this, Bullet gets from the operating system the sort table it uses to order key data.
+Alternatively, you may specify the sort table data directly if you have special needs, such
+as the case where the operating system doesn't have the sort table you need to use.
+<p>
+If Bullet cannot get the sort table from the operating system (and no sort table is otherwise
+specified), it will use instead one of two internal sort tables: codepage 850 (multi-lingual,
+ASCII) or codepage 1252 (Windows, Ansi).  It determines which of these to use based on a flag
+specified for BltIx4CreateFile():  if you specify <code>SORT_USE_ANSI_SET</code> in sortCmpCode,
+Bullet will use the cp1252 table, otherwise the cp850 table.  This sort table is stored in each
+index file (see KH.sortTable[]).
+<p>
+Yet another possibilty is to replace the Bullet index-support routines.  For example, if you
+need to use unicode data in records (or any double-byte character set) you need to replace
+Bullet's routines that construct and compare keys.  If you also need to use unicode field names,
+then you'll also need to replace the routine that parses the text-based key expression (though
+that can be worked around).  Information on replacing the index-support routines is covered
+elsewhere in this supplement.
+<br>
+<br>
+<br>
+<p>
+<center><font size=-1>All content Copyright &copy; 1999 Cornel Huth.  All rights reserved.</font></center>
+</body>
+</html>

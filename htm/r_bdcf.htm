@@ -1,0 +1,328 @@
+<html>
+<head>
+<title>BltDataCreateFile</title>
+</head>
+<body>
+<h4>BltDataCreateFile</h4>
+<br>
+<a href="r_bdif.htm">&lt;&nbsp;Prev</a>&nbsp;&nbsp;<a href="_toc.htm">TOC</a>&nbsp;&nbsp;<a href="r_bdof.htm">Next&nbsp;&gt;</a>
+<p>
+<pre>
+TBLT_RETC TBLT_ENTRY BltDataCreateFile(ULONG fileID,
+                                       ULONG fields,
+                                       FD *fieldListPtr,
+                                       TBLT_FNCHAR *filenamePtr,
+                                       ULONG maMode,
+                                       TBLT_AUXPACK *apPtr);
+
+
+ fileID         I:first byte of the DBF file (low byte), memo block size (highword)
+ fields         I:number of fields
+ fieldListPtr   I:structure to use to build DBF field descriptors
+ filenamePtr    I:name of file to create (OEM characters recommended)
+ maMode         I:memory allocation mode
+ apPtr          I:auxiliary pack
+
+</pre>
+This routine creates a DBF data file based on the given field descriptor
+data.
+<p>
+The <code>fileID</code> byte is typically 0x03 for DBF data files without a secondary
+memo file.  If memo fields are needed, .OR. 0x88 with 0x03 to get 0x8B,
+which flags that this DBF is to include a like-named DBT (memo file).  The
+memo file is created automatically.  All memo data is stored in this file.
+<p>
+To specify a memo block size other than 512 bytes, set the highword of fileID to
+that size.  For example,
+<p>
+  <code>fileID = (1024 << 16) + 0x8B;  // use 1024-byte memo blocks</code>
+<p>
+The maximum block size is 65535 bytes.  The size should be a multiple of 512 (512,
+1024,...) for performance.  The minimum size is 24 bytes.
+<p>
+<code>Fields</code> indicates the number of field descriptors at fieldListPtr.  Each
+field's descriptor is 32 bytes long.  See the compiler include file for the
+technical structure of the field descriptor (FD).  You can have as many
+fields as you need (250 max recommended), and any number of different
+field types.  You can as many memo fields as you need, also, though one
+or two is more typical.
+<p>
+The <code>fieldListPtr</code> points to the field descriptors which
+describe the DBF file to create.  FDs are described below.
+<p>
+The <code>filename</code> is the name to be given to the file to create.
+<p>
+<code>maMode</code> is the memory allocation mode.  In normal use this is specified
+directly in each TBLT_DH structure, but at this point there is no TBLT_DH structure
+allocated.  The standard memory allocation mode is 0.
+<p>
+<code>apPtr</code> is the pointer to an optional auxiliary pack.  Set apPtr = 0 if there
+is no pack.  This pack lets you override the internal operating system IFS calls for this
+handle, and set IFS options, such as 64-bit file offsets.  See the supplemental
+documentation for details.  Once the file is opened, the apPtr is specified directly in the
+TBLT_DH structure.
+<p>
+<em>Returns:</em>&nbsp;Non-zero indicates an error, otherwise the file is created.  The file needs
+to be opened before use with <code>BltDataOpenFile()</code>.
+<p>
+<br>
+<h5><font size=+1>Field Descriptor</font></h5>
+<p>
+Each field descriptor is 32 bytes in size; only the first 18 bytes are used and the
+remaing must be 0.  For each field in the DBF data record, an FD (filled in by
+you) is used to describe that field with regard to its name, type, and size.
+<ul>
+<li>fieldName
+<li>fieldType
+<li>fieldDA (field offset)
+<li>fieldSize
+ <ul>
+ <li>fieldLength
+ <li>fieldDC (field decimal count, may be 0)
+ </ul>
+ or<br>
+ <ul>
+ <li>C_fieldLength (used for C field types only)
+ </ul>
+</ul>
+<p>
+The FD (field descriptor) <code>fieldName</code> is to be from 1 to 10 OEM characters
+(zero-terminated) and may include the uppercase characters A to Z, and _.
+<p>
+The FD <code>fieldType</code> is a single character.  The available types are shown
+below.  Additional types are possible if support is added in the
+<code>BltFuncIx4BuildKey()</code> and <code>BltFuncIx4SortCmp()</code> routines.  All
+data in standard DBF data fields is ASCII text.  Bullet, however, allows binary data, too.
+<p>
+Standard types:
+<p>
+<table border cellspacing=1 cellpadding=4>
+<tr>
+<th>fieldType
+<th>type
+<th>size
+<th>example
+<th>notes
+<tr>
+<td align=center>C
+<td align=center>character
+<td align=center>1-254 (1-32000)
+<td><code>"40th Floor"</code>
+<td>with or without 0T
+<tr>
+<td align=center>N
+<td align=center>numeric
+<td align=center>1-18
+<td align=right><code>'&nbsp;&nbsp;123.45'</code>
+<td>right-justified, decimal-aligned, no 0T
+<tr>
+<td align=center>D
+<td align=center>date
+<td align=center>8
+<td><code>'20001231'</code>
+<td>YYYYMMDD, no 0T
+<tr>
+<td align=center>L
+<td align=center>logical
+<td align=center>1
+<td><code>'T'</code>
+<td>T,F,t,f,Y,N,y,n,&lt;space&gt;
+<tr>
+<td align=center>M
+<td align=center>memo
+<td align=center>10
+<td><code>'0000000001'</code>
+<td>memo #, blank if none, leading 0s or &lt;spaces&gt;, no 0T
+</table>
+<p>
+<br>
+Common extended types:
+<p>
+<table border cellspacing=1 cellpadding=4>
+<tr>
+<th>fieldType
+<th>type
+<th>size
+<th>example
+<th>notes
+<tr>
+<td align=center>F
+<td align=center>numeric
+<td align=center>1-18
+<td align=right><code>'&nbsp;&nbsp;123.45'</code>
+<td>same as N
+<tr>
+<td align=center>B
+<td align=center>memo
+<td align=center>10
+<td><code>'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2'</code>
+<td>binary memo field; same as M
+<tr>
+<td align=center>G
+<td align=center>memo
+<td align=center>10
+<td><code>'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'</code>
+<td>general memo field; same as M
+</table>
+<p>
+<br>
+Bullet 3.0 extended types:
+<p>
+<table border cellspacing=1 cellpadding=4>
+<tr>
+<th>fieldType
+<th>type
+<th>size
+<th>example
+<th>notes
+<tr>
+<td align=center>SORT_MIXED_S16 ('3')
+<td align=center>signed short
+<td align=center>2
+<td align=center><code>SHORT</code>
+<td>requires SORT_MIXED sortCmpCode
+<tr>
+<td align=center>SORT_MIXED_U16 ('4')
+<td align=center>unsigned short
+<td align=center>2
+<td align=center><code>USHORT</code>
+<td>requires SORT_MIXED sortCmpCode
+<tr>
+<td align=center>SORT_MIXED_S32 ('5')
+<td align=center>signed long
+<td align=center>4
+<td align=center><code>LONG</code>
+<td>requires SORT_MIXED sortCmpCode
+<tr>
+<td align=center>SORT_MIXED_U32 ('6')
+<td align=center>unsigned long
+<td align=center>4
+<td align=center><code>ULONG</code>
+<td>requires SORT_MIXED sortCmpCode
+<tr>
+<td align=center>SORT_MIXED_S64 ('7')
+<td align=center>64-bit long
+<td align=center>8
+<td align=center><code>INT64</code>
+<td>requires SORT_MIXED sortCmpCode
+<tr>
+<td align=center>SORT_MIXED_U64 ('8')
+<td align=center>64-bit unsigned long
+<td align=center>8
+<td align=center><code>UINT64</code>
+<td>requires SORT_MIXED sortCmpCode
+<tr>
+<td align=center><code>SORT_MIXED_DBL</code> ('Y')
+<td align=center>IEEE FP double
+<td align=center>8
+<td align=center><code>DOUBLE</code>
+<td>requires SORT_MIXED sortCmpCode
+</table>
+<p>
+Any character may be used as the field type and any data may be used in a data
+field but only those listed in the three tables above can be used in an index.  Only
+the standard fieldTypes are common to all Xbase versions since dBASE 3.1 (c.1985).
+<p>
+<b>C</b>-haracter field types are used to store text strings.  C fields are typically,
+but not required to be, left-justified and zero-terminated.
+<p>
+<b>N</b>-umeric field types are used to store numbers, either integer or
+floating-point, in text format (for example, "12345.78").  When using this
+field type, this field in all records should be right-justified and decimal-point
+aligned.  There is no zero-terminator on the field, nor is there on any Xbase
+field except C fields, and there it is only optional.  The maximum field size
+is 18 digits (18.0), though 16 or fewer are recommeneded since most CPU/FPUs
+are limited to 16 significant digits.
+<p>
+<b>D</b>-ate and <b>L</b>-ogical field types use the same members as numerics
+for field size, but their size is always constant:  Date fields are 8 bytes
+('YYYYMMDD') and Logical fields are 1 byte (any of the following: <space>,
+Y/N/T/F/y/n/t/f).  An empty date should be left blank (all spaces) and an
+empty logical should be left blank (a space).
+<p>
+<b>M</b>-emo field types are used to store a 10-byte ASCII memo block number
+(similar in concept to a record number) of the first block allocated in a DBT
+memo file for the memo data.  Memo numbers are stored in ASCII (<i>ie</i>, not
+binary).  Typically, the memo number is stored with leading zeroes when there
+is memo data (<i>ie</i>, a non-zero memo block number) and all spaces when there
+is no memo data.  However, it's possible that a memo field's contents created
+by another Xbase application will have leading spaces instead.  Therefore, care
+must used when using sscanf() to convert the ASCII number to binary (the
+<code>BltMemo*()</code> routines used binary values to specify which memo records
+to read/write).
+<p>
+<pre>
+ '0000000001'  is a valid memo number, as stored in a DBF record
+ '         1'  is also valid
+ '          '  all spaces indicates no memo (all zeroes is <em>not</em> correct)
+</pre>
+Memo number fields are not 0-terminated, making sscanf() dangerous when the
+memo number has leading spaces (sscanf() ignores leading spaces when converting
+from ASCII to binary), but a <em>junk</em> field can be placed after a memo field
+to simplify reading and writing the memo number.  A junk field would be a field
+that isn't used for anything except to occupy the byte (set to 0) after a memo
+field, as shown in this sample DBF record:
+<p>
+<table border cellspacing=1 cellpadding=1>
+<tr>
+<td>*
+<td>Stefan
+<td>Angstl
+<td>0000000001
+<td>\0
+<td>84489
+<td>Burghausen
+</table>
+<p>
+<br>
+Only a Character field should be terminated with a 0, but even that is not
+required.  Character fields are typically left-justified.
+<p>
+An F field type is exactly the same as an N.  Fields types B and G, for
+binary and general memo types, are the same as M field types.  Typically,
+the M type is used memo text; B for memo binary data (images), and G is
+used for Windows OLE support (whose use is very application-specific).  The
+low-level data structures are all the same for these three memo types.
+<p>
+SORT_MIXED S16 to SORT_MIXED_U64 are Bullet types for integer binary data.  Binary data
+is not normally used in Xbase DBF records, but it is very convenient to have.  Also
+available is the Y field type, which is for binary double (8-byte, IEEE floating-point)
+data.  When using these binary types, FD.fieldSize is not used by Bullet since the
+sizes are already known (2/4/8 bytes).  Therefore, you can use the fieldSize members
+of FD to store the display format to be used for these types.  For example, if using
+a 'Y' field type, you can use the N size format (<i>eg</i>, 10.2) without regard to the
+actual data size occupied in the DBF record.  You may also simply use the actual data
+size (2/4/8 bytes).  These field types are only available to Bullet 3; other applications
+won't be able to use them.
+<p>
+<br>
+The FD <code>fieldDA</code> is used in Bullet to store the start offset of each field
+within the record.  The first field starts at offset 1.  This offset is calculated
+<em>by Bullet</em> when the file is created, and again each time the DBF is opened since
+not all Xbase implementations use this field this way.  This field can be safely used in
+this manner, even though it is not standard.
+<p>
+The FD <code>fieldSize.C_fieldLength</code> is used to describe the length of a
+<b>C</b>-haracter field (only), and may be from 1 to 32000 bytes.  The standard
+maximum length of a character field is 254 bytes.  Bullet 3 extends this to
+32000 bytes.  The recommended maximum character field length is 1000 bytes.
+If more is required a memo field may be a better choice.  A single memo can
+hold any size data.
+<p>
+The FD <code>fieldSize.fs.fieldLength</code> and <code>.fieldDC</code> are used
+to describe the size of all other standard field types, including the <b>N</b>-umeric
+field.  .fieldLength is the total field length, in bytes.  The .fieldDC is the number
+of places to the right of the decimal point.  A length of 8 and DC of 2 would allow
+a "12345.67" to fill the field.  Numbers are in ASCII text, and are right-justified
+and decimal-point aligned.  For all other known, standard field types <code>.fieldDC</code>
+is set to 0, with <code>fieldSize.fs.fieldLength</code> set to the required size, as
+shown in the tables above.
+<p>
+The rest of the (unused) FD members must be set to 0 (binary 0).
+<br>
+<br>
+<br>
+<p>
+<center><font size=-1>All content Copyright &copy; 1999 Cornel Huth.  All rights reserved.</font></center>
+</body>
+</html>

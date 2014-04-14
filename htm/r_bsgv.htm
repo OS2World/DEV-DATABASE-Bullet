@@ -1,0 +1,49 @@
+<html>
+<head>
+<title>BltGetVar</title>
+</head>
+<body>
+<h4>BltGetVar</h4>
+<br>
+<a href="bltmisc.htm">&lt;&nbsp;Prev</a>&nbsp;&nbsp;<a href="_toc.htm">TOC</a>&nbsp;&nbsp;<a href="r_bssv.htm">Next&nbsp;&gt;</a>
+<p>
+<pre>
+TBLT_RETVAL TBLT_ENTRY BltGetVar(LONG index,
+                                 TBLT_RETC *rcPtr);
+
+
+ index          I:index of item to get
+ rcPtr          I:pointer to var to store return code (except for BLTVAR_IFS)
+
+</pre>
+This routine retrieves a Bullet state variable.
+<p>
+The following item index values are available to get:
+<pre>
+ BLTVAR_IFS       set rcPtr to address of a TBLT_AUXPACK structure; gets internal vectors (R/O)
+ BLTVAR_DLLH      low word is DLL handle (R/O)
+ BLTVAR_MAF       count of successful memory frees (R/O)
+ BLTVAR_MAA       count of successful memory allocations (R/O)
+ BLTVAR_VERSION   pointer to Bullet version string (R/O)
+ BLTVAR_MPNL      default max pathname length
+ BLTVAR_MPCL      default max pathname component length
+ BLTVAR_MPXL      default max pathname extension length
+ BLTVAR_MFSF      max file size fudge (128KB)
+ BLTVAR_MARSV     default bytes to hold back from Bullet reindex
+ BLTVAR_MASZRX    default max total memory reindex may allocate
+ BLTVAR_MASZ      default max single allocation request size
+ BLTVAR_MCBSZ     memo copy buffer size (2KB)
+ BLTVAR_MCBMAM    memo copy buffer memory allocation strategy (0)
+</pre>
+Default values above are used when the corresponding value in the TBLT_KH/TBLT_DH
+structure is set to 0.  The default values vary depending on platform.
+<p>
+<em>Returns:</em>&nbsp;The item's value is returned.  rcPtr is set to the
+return code (0=okay) (except for BLTVAR_IFS).
+<br>
+<br>
+<br>
+<p>
+<center><font size=-1>All content Copyright &copy; 1999 Cornel Huth.  All rights reserved.</font></center>
+</body>
+</html>

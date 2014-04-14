@@ -1,0 +1,186 @@
+4-Oct-99
+Bullet 3.x Visual Basic Support routines
+
+New support for VB has been added in the release.  The big hurdle when
+working with VB is that it can't do anything itseld except in unicode,
+and just about everyone it talks to it talks to in asni.  What VB does,
+and completely unknown to the programmer, is make conversion calls:  when
+it calls a routine it converts any VB string to ansi, and then on return
+from the call it converts the ansi it passed back to unicode.  That in
+itself is not a big deal, but what is a big deal is that if you have
+As String in a UDT, and pass that UDT to an Win32 API or Bullet call,
+VB first copies the entire UDT structure to a temporary structure, then
+for each As String in the UDT, converts it and changes the pointer in
+the UDT of each As String to point to the converted, now-ansi string.
+Unfortunately, it doesn't always work (and even if it did, it can be
+a huge resource hog).  So, Bullet includes the following additional
+routines just for VB.
+
+The best way to deal with this problem is to use byte strings, rather than
+unicode, whenever you want to talk with Bullet.  Filenames are still
+unicode (ie, prototypes are ...ByVal filenamePtr As String ...), but
+everything else is byte strings.  What's a byte string?  A byte string
+is just an array of type Byte.  For example, look at the BLTDH and BLTKH
+structures in b3vbwin.bas (the Bullet VB include module).  Instead of
+XXX As String, these strutures use XXX(1 to 10) As Byte.  In that case,
+a 10-byte string.  It's important to be consistent, so always specify
+an explicity base (the 1 in 1 to 10), otherwise VB will use 0 to 10 by
+default.
+
+ -----------------------------------------------------------------------------
+
+To make it easy to move As String data back and forth through byte
+strings, the following routines are used.
+
+
+
+    Declare Function BltVB_StrPtr Lib "b3w32d30" _
+                Alias "BltTestCallBack" (ByVal Strg As String) As Long
+
+BltVB_StrPtr() returns a pointer to an ansi string, given a unicode
+string as its argument.  VB does all this behind the scene, and you
+wind up with a pointer to temporary ansi string.  This memory is only
+temporary and is one of the main problems why letting VB do the unicode->
+ansi->unicode conversion is not a good idea.  The pointer can become
+invalidate as soon as the next time you call this (or VB uses the memory).
+Not recommended except when you won't be making any calls between getting
+the pointer and using it.  If you want a temporary pointer to a VB string,
+use it.
+
+ -----------------------------------------------------------------------------
+
+    Declare Function BltVB_AnyPtr Lib "b3w32d30" _
+                Alias "BltTestCallBack" (StrucVar As Any) As Long
+
+BltVB_AnyPtr() returns a pointer to whatever you pass it.  You should
+only pass things that are not temporary (ie, don't pass expressions).
+For example, the index routines need BLTKH.xbLinkPtr to point to the
+BLTDH structure the file indexes.  You can set this like so:
+
+  BLTKH khPtr
+  BLTDH dhPtr
+  ...
+  khPtr.xbLinkPtr = BltVB_AnyPtr(dhPtr)
+
+BltVB_AnyPtr() is a very useful routine, and fast.
+
+ -----------------------------------------------------------------------------
+
+    Declare Function BltVB_FuncPtr Lib "b3w32d30" _
+                Alias "BltTestCallBack" (ByVal FuncPtr As Long) As Long
+
+
+BltVB_FuncPtr() is used to get the address of a VB-written Function
+so that you can have Bullet use it for its callback routine.  The
+callback routine should be kept short and simple (limitations can be
+found in the VB Component Tools Guide manual).  For example,
+
+   ' use BltVB_FnPtr with an AddressOf argument,
+   ...
+   khPtr.xCallbackPtr = BltVB_FnPtr(AddressOf MyRixCallbackRoutine)
+
+where MyRixCallbackRoutine() is written in VB (and at the module level,
+not form).  Any parameters depend on the caller.  In the case of this,
+reindex callback, a BLTKH pointer and a ULONG are passed on the stack.
+See the b30demo1 source example for this in action.
+
+ -----------------------------------------------------------------------------
+
+A few other, useful routines included are
+
+    Declare Sub BltRtlMemSet Lib "b3w32d30" _
+                Alias "BltMemSet" (ByVal destPtr As Long, _
+                ByVal value As Long, ByVal length As Long)
+
+Set memory to a byte value (only the low 8 bits of value are used).
+
+
+    Declare Sub BltRtlMemCpy Lib "b3w32d30" _
+                Alias "BltMemCpy" (ByVal destPtr As Long, _
+                ByVal srcPtr As Long, ByVal length As Long)
+
+Copy memory from on place to another.
+
+
+    Declare Function BltStrLen Lib "kernel32" _
+                Alias "lstrlen" (ByVal strPtr As Long) As Long
+
+Return the length of a C string.  The kernel routine is used since Bullet 3.0
+doesn't have an exported routine to this.
+
+ -----------------------------------------------------------------------------
+
+The following routines are written in VB.  Source is in the include module.
+
+
+BltRtlStrLen() simply calls BltStrLen(), though it has an extra argument
+which is not currently used in Bullet 3.0.
+
+    Public Function BltRtlStrLen(strPtr As Long, strType As Long)
+
+
+ -----------------------------------------------------------------------------
+
+
+To copy a VB unicode string to a byte string, use BltVB_CopyStrU2A().
+
+    Public Sub BltVB_CopyStrU2A(ascStr() As Byte, maxBytes As Long, _
+                                 basicStr As String, ff As Long)
+
+ascStr() is a byte array, such as
+
+ dim myByteStr(1 to 100) as Byte  'be sure to use 1 to ...
+
+maxBytes should be set to the size of myByteStr, or smaller.
+
+basicStr is the VB unicode string that is copied into ascStr().  Only
+regular ascii characters are copied correctly (no translation is done,
+only simple 16->8 bit conversion).  If basicStr is less than maxBytes,
+then only as many characters in basicStr are copied, the rest of ascStr()
+is set to 0 (see the source in the include module).
+
+ff is a fast-flag.  Nornmally you pass 0.  Check the source to see if
+you want to pass something else.
+
+ -----------------------------------------------------------------------------
+
+To copy a byte string to a VB unicode string, use BltVB_CopyStrA2U().
+
+    Public Sub BltVB_CopyStrA2U(basicStr As String, maxBytes As Long, _
+                                ascStr() As Byte, ff As Long)
+
+The arguments are similar to BltVB_CopyStrU2A().
+
+ -----------------------------------------------------------------------------
+
+Similar to BltVB_CopyStrA2U() is
+
+    Public Function BltVB_CopyStrA2UEx$(basicStr As String, _
+                                        maxBytes As Long, ascStr() As Byte, _
+                                        ff As Long)
+
+but it's a function which returns the basicStr.
+
+ -----------------------------------------------------------------------------
+
+In some cases, you'll be dealing with pointers directly.  Use
+
+    Public Sub BltVB_CopyStrMem2U(basicStr As String, maxBytes As Long, _
+                                memPtr As Long, ff As Long)
+
+to convert ansi (at memPtr) to VB unicode (in basicStr).
+
+ -----------------------------------------------------------------------------
+
+Similar to BltVB_CopyStrMem2U() is
+
+    Public Function BltVB_CopyStrMem2UEx$(basicStr As String, _
+                                          maxBytes As Long, _
+                                          memPtr As Long, ff As Long)
+
+which is a function that returns a VB unicode string.
+
+
+ -----------------------------------------------------------------------------
+
+More routines will be added, if needed.

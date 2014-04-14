@@ -1,0 +1,101 @@
+<html>
+<head>
+<title>BltDataOpenFile</title>
+</head>
+<body>
+<h4>BltDataOpenFile</h4>
+<br>
+<a href="r_bdcf.htm">&lt;&nbsp;Prev</a>&nbsp;&nbsp;<a href="_toc.htm">TOC</a>&nbsp;&nbsp;<a href="r_bdclf.htm">Next&nbsp;&gt;</a>
+<p>
+<pre>
+TBLT_RETC TBLT_ENTRY BltDataOpenFile(TBLT_DH *dhPtr,
+                                     ULONG mode);
+
+
+ dhPtr          IO:data file control structure
+ mode           I:special-handling flags
+
+</pre>
+This routine opens a DBF data file, and if its fileID indicates a memo
+file, the memo file is also opened.
+<p>
+The TBLT_DH structure is to have already been allocated (instanced), using
+<code>BltDataInfoFile()</code> if needed.  Before calling, the TBLT_DH structure should have
+the following members filled:
+<pre>
+ .filenamePtr
+ .asMode
+ .noFields
+</pre>
+<p>
+NOTE: You must <b>preallocate</b> the TBLT_FD space in TBLT_DH before opening the
+file.  The structure type in types.h uses fd[1] only as a place holder.
+You must allocate enough fd fields to hold all fields (specified in .noFields) before
+opening the data file.  See BltDataInfoFile for more, and bd/open.c for a source
+example.  .noFields must be the number of fields in the data file (see BltDataInfoFile
+if this is not known).
+<p>
+TBLT_DH.asMode is a bit-flag variable with the following meaning:
+<p>
+<pre>
+ OPENFLAGS_COMMIT        0x400000 // slow file writes (DOS 4+, all)
+ OPENFLAGS_NOCRIT        0x200000 // critical errors trapped (DOS 4+, all)
+ OPENFLAGS_NOCACHE       0x100000 // (OS/2)
+ OPENFLAGS_FOURGB        0x100000 // (FAT32)
+ OPENFLAGS_IO_RNDSEQ     0x030000 // random access, some seq access (OS/2)
+ OPENFLAGS_IO_RND        0x020000 // mostly random access (OS/2)
+ OPENFLAGS_IO_SEQ        0x010000 // mostly sequential access (OS/2)
+                                  // the above values are >> 8 internally
+ OPENFLAGS_NOINHERIT     0x000080 // child programs do not inherit asMode
+ OPENFLAGS_DENY_NONE     0x000040 // share: do not deny others
+ OPENFLAGS_DENY_READ     0x000030 // share: deny others read
+ OPENFLAGS_DENY_WRITE    0x000020 // share: deny others write
+ OPENFLAGS_DENY_RW       0x000010 // share: deny others read/write
+ OPENFLAGS_COMPAT        0x000000 // share: illegal value
+ OPENFLAGS_ACCESS_READ7  0x000004 // access: read-only, time preserved (DOS7)
+ OPENFLAGS_ACCESS_RW     0x000002 // access: read/write
+ OPENFLAGS_ACCESS_WRITE  0x000001 // access: write only
+ OPENFLAGS_ACCESS_READ   0x000000 // access: read only
+
+</pre>
+Set TBLT_DH.asMode bit31=1 to bypass the OEM uppercase of field names, normally done by
+Bullet at each open.
+<p>
+Mode (the parameter, mode, not TBLT_DH.asMode) is a special-case flag with the
+following bit flags:
+<table border=0 cellspacing=4 cellpadding=4>
+<tr>
+<td valign=top><code>FLAGS_READ_THROUGH_LOCK_BIT</code>
+<td>Use read-through locking. This limits maximum filesize to one-half normal.
+<tr>
+<td valign=top><code>FLAGS_READONLY_BIT</code>
+<td>Disallow writes to this handle.  Any attempt
+to perform a write operation to this handle is
+rejected, and an error returned.
+<tr>
+<td valign=top><code>FLAGS_SKIP_DELETED_BIT</code>
+<td>Skip over deleted records in, and only in, the BltIx4Get*() routines.
+</table>
+<p>
+<em>Return:</em>&nbsp;Non-zero indicates an error, otherwise the file is opened with the
+following members of TBLT_DH filled in:
+<pre>
+ .handle
+ .fType
+ .noFields (again)
+ .memoHandle (if memo attached)
+ FDs are filled in and upper-cased/0-filled
+</pre>
+<p>
+If the fileID indicates a memo file but one cannot be opened, a
+<code>WRN_CANNOT_OPEN_MEMO</code> error is returned; the DBF file is still open.
+<p>
+If this file was not previously closed properly, a <code>WRN_INCOMPLETE_XACTION</code>
+error is returned; the DBF (and DBT) is still open.
+<br>
+<br>
+<br>
+<p>
+<center><font size=-1>All content Copyright &copy; 1999 Cornel Huth.  All rights reserved.</font></center>
+</body>
+</html>

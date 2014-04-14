@@ -1,0 +1,89 @@
+<html>
+<head>
+<title>BltUnlockEx</title>
+</head>
+<body>
+<h4>BltUnlockEx</h4>
+<br>
+<a href="r_blex.htm">&lt;&nbsp;Prev</a>&nbsp;&nbsp;<a href="_toc.htm">TOC</a>&nbsp;&nbsp;<a href="bltlock.htm">Next&nbsp;&gt;</a>
+<p>
+<pre>
+TBLT_RETC TBLT_ENTRY BltUnlockEx(TBLT_LOCKEX *lockExPtr,
+                                 ULONG *slotPtr);
+
+
+ lockExPtr      I:lock control structure
+ slotPtr        O:slot that failed
+
+</pre>
+This routine unlocks all the items in the lock pack as a single transaction.
+<p>
+The following TBLT_LOCKEX structure must be filled, one for each operation in the list
+to perform, and must <strong>exactly</strong> match the corresponding BltLockEx() call made:
+<p>
+<pre>
+ typedef struct _BLTLOCKEX {
+  VOID *khdhPtr;         // I:KH or DH of file
+  ULONG mode;            // set to 0 (not used for unlock)
+  ULONG recNoStart;      // I:for DH locks
+  ULONG recCount;        // I:for DH locks
+  ULONG action;          // O:action performed (I:set to 0)
+  ULONG flags;           // I:operation flags
+  VOID *rsvPtr;          // set to 0 (used internally)
+  VOID *nextPtr;         // I:next TBLT_IUEX, or 0 if no more
+ } TBLT_LOCKEX;
+</pre>
+<p>
+<code>khdhPtr</code> may be either a TBLT_KH or TBLT_DH structure.
+<p>
+This routine performs a transaction of <code>BltUnlockDataRecord()</code> and/or
+<code>BltUnlockIx4File()</code> calls, depending on khdhPtr.
+<p>
+If khdhPtr refers to a data file, the <code>BltUnlockDataRecord()</code> routine is
+called for the operation (for <code>recNoStart</code>, and <code>recCount</code>
+see <code>BltUnlockDataRecord()</code>).
+<p>
+If khdhPtr refers to an index file, the <code>BltUnlockIx4File()</code> routine is
+called for the operation (<code>recNoStart</code> and <code>recCount</code> are not
+used unless <code>FLAGSEX_LOCK_DUAL</code> is specified (see flags below)).
+<p>
+<code>action</code> is the action performed on this list item.  Action is set to
+one of the following values for each operation in the list:
+<pre>
+  0 = nothing done (error encountered)
+  1 = unlocked index okay
+  2 = unlocked data okay
+  3 = unlocked index and data okay (possible if flags.bit7=1, 0x80)
+</pre>
+<p>
+<code>flags</code> modifies the operation performed on this item:
+<pre>
+ FLAGSEX_LOCK_DUAL: if khdhPtr is an index file, then khPtr->xbLinkPtr
+                    is also unlocked using the information in .recNoStart
+                    and .recNoCount  (flags.bit7=1)
+</pre>
+<p>
+<code>rsvPtr</code> is used internally, and should be initialized to 0.
+<p>
+<code>nextPtr</code> is used to link to the next operation in the list.  Each
+operation uses a separate TBLT_LOCKEX structure.  When linked together via this
+nextPtr, the list becomes the transaction list:  each operation (each LOCKEX) is
+executed in order; if all operations succeed, the transaction is successful.
+Set .nextPtr to 0 in the last list operation.
+<p>
+If any unlock operation failed, for whatever reason, all following list items are
+<strong>not</strong> processed.  This means that the programmer must correct the
+cause of the error and restart the unlock, this time starting not at the first
+list item, but at the item that failed (<em>ie</em>, the item at number *slotPtr),
+and have the rest of the unlocks processed.
+<p>
+Note: *slotPtr is a pointer to a ULONG.  This is the number of the list item the
+failed, starting at 1 (<em>the first slot is slot 1</em>).
+<p>
+<em>Return:</em>&nbsp;Non-zero indicates an error, with *slotPtr set to the
+list item that failed (slot 1 is the first item in the list); otherwise all
+operations in the list completed successfully.
+<p>
+<center><font size=-1>All content Copyright &copy; 1999 Cornel Huth.  All rights reserved.</font></center>
+</body>
+</html>

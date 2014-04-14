@@ -1,0 +1,172 @@
+<html>
+<head>
+<title>File structures and calculations</title>
+</head>
+<body>
+<h4>File structures and calculations</h4>
+<br>
+<a href="x_rcref.htm">&lt;&nbsp;Prev</a>&nbsp;&nbsp;<a href="_toc.htm">TOC</a>&nbsp;&nbsp;<a href="x_mt.htm">Next&nbsp;&gt;</a>
+<p>
+DBF file header format:
+<pre>
+ type    DH name        offset  description
+
+ UCHAR  fileID              0  file id byte
+ UCHAR  lastUpdateYR        1  binary (plus 1900)
+ UCHAR  lastUpdateMO        2  binary
+ UCHAR  lastUpdateDA        3  binary
+ ULONG  noRecords           4  total number of records
+ USHORT headerLength        8  length of data header
+ USHORT recordLength       10  record length
+ USHORT nada               12  reserved
+ UCHAR  xactionFlag        14  not-flushed flag
+ UCHAR  encryptFlag        15  reserved
+ UCHAR  rsv16[12]          16  reserved
+ UCHAR  rsv28              28  reserved
+ UCHAR  rsv29              29  reserved
+ UCHAR  rsv30[2]           30  reserved
+ TBLT_FD fd[1]             32  for each field
+
+</pre>
+DBT memo header file format:
+<pre>
+ type    DH name        offset  description
+
+ ULONG  memoAvailBlock      0  next available block
+ ULONG  memoUnk1            4  not used
+ UCHAR  memoFilename[8]     8  filename proper
+ ULONG  memoUnk2           16  not used
+ ULONG  memoBlockSize      20  block size
+
+</pre>
+IX4 file header format:
+<pre>
+ type    KH name        offset  description
+
+ ULONG  fileID              0  file id
+ ULONG  nodeSize            4  size of a node
+ ULONG  rootNode            8  root node (1-based)
+ ULONG  noKeys             12  total number of keys
+ ULONG  availNode          16  next available node
+ ULONG  freeNode           20  next free node
+ ULONG  keyLength          24  length of key
+ ULONG  maxKeys            28  maximum number of keys on a node
+ ULONG  codePage           32  code page from CreateIndexFile
+ ULONG  countryCode        36  country code from CreateIndexFile
+ ULONG  sortCmpCode        40  sortCmpCode
+ ULONG  xlateCount         44  number of key fields (16 max fields)
+ TBLT_XLATEX xlateExp[16]  48  key construct info (96 bytes total)
+ ULONG  rsv144            144  reserved
+ ULONG  rsv148            148  reserved
+ UCHAR  xactionFlag       152  not-flushed flag
+ UCHAR  rsv153[7]         153  reserved
+ UCHAR  rsv160[224]       160  reserved
+ UCHAR  expression[380]   384  key expression, user (ASCIZ)
+ ULONG  STsize            764  size of sort table following
+ UCHAR  sortTable[256]    768  sort table, fill at index create
+ UCHAR  buffer[512]      1024  node buffer (512 is the minimum size)
+
+</pre>
+A node buffer looks like:
+<pre>
+ type       name        offset  description
+
+ UCHAR  key count           0  number of XNODEs on this node (1 to KH.maxKeys)
+ ULONG  back node           1  previous node, or 0 if a leaf
+ XNODE  node[key count]     5  (see next)
+</pre>
+where an XNODE is:
+<pre>
+ UCHAR keyValue[keyLength]  0  (these offsets are relative this XNODE)
+ ULONG record number        KH.keyLength
+ ULONG forward node         KH.keyLength+4   (next node, or 0 if a leaf)
+
+</pre>
+So, XNODE[n] starts at offset <code>5+(n*(KH.keyLength+8))</code>, where n is 0 to (key count-1).
+<p>
+The maximum number of keys that can be put on a single node depends on the key length
+and the node size:
+<pre>
+ max keys per node = (nodeSize-5)/(keyLength+8)
+</pre>
+For example, with a 512-byte node, and a key length of 16 bytes, the max keys per node
+is (512-5)/(16+8), or 21 keys.
+<p>
+The absolute maximum is 255 keys per node.  The minimum key length is 4 bytes.
+<p>
+<br>
+<h4>Maximum keys handled by BltFuncIx4Reindex()</h4>
+<p>
+The maximum filesize (and therefore, maximum keys) that the Bullet reindex routine can handle
+varies depending on build type, buffer size, and key length.  The reindex routine uses a single
+temporary file to store the runs (KH.workHandle is non-zero while this work file is open);
+this file is created and deleted by the reindex routine.
+<p>
+<b>For 16-bit builds</b>, a maximum of 8128 runs are possible (with 4-byte keys).  Each run
+is buffer-size bytes, where buffer size is limited by BLTVAR_MASZ (and, in total, by
+BLTVAR_MASZRX).  At the default (and maximum) BLTVAR_MASZ of 65024 bytes (run buffer
+size), and 8128 runs, the largest file size is (8128 * 65024 bytes), or 504 MB,
+representing more than 66 million 4-byte keys (the run buffer contains key+record
+number only).
+<p>
+Here are several scenarios for 16-bit builds:
+<pre>
+  4-byte key: 65024/8 =8128  8128*65024=528 million bytes (8128*8128=66+ million keys)
+ 16-byte key: 65024/20=3276  3276*65024=213 million bytes (3276*3276=10+ million keys)
+ 93-byte key: 65024/97= 670   670*65024= 43 million bytes ( 670* 670=448,000 keys)
+196-byte key: 65024/200=325   325*65024= 21 million bytes ( 325* 326=105,000 keys)
+</pre>
+As you can see, there can be as many keys per run as there are runs (therefore, 8128*8128
+to get the maximum number of keys...actually, it's better to think of this as, there are
+as many runs as there are keys per run).  If you need to handle millions of keys in the
+16-bit build you will have to use a reasonable key size.  For 32-bit builds you have a lot
+more options because you are not limited to a run buffer size of less than 64K.
+<p>
+<b>For 32-bit builds</b>, a maximum of 65535 runs are possible.  Each run is buffer-size
+bytes, where buffer size is limited by BLTVAR_MASZ (and, in total, by BLTVAR_MASZRX).  At
+the default BLTVAR_MASZ of 128 KB (run buffer size), 16384 runs are possible (with 4-byte
+keys), so the largest file size is (16384 * 128KB), or about 2 GB (if the operating system
+can handle files this size).  At this 128 KB (default) buffer size, the file size and number
+of keys handled is double (and a little more) what it is above, in the 16-bit builds.  However,
+you may increase the default buffer size if needed.  For example, with a 256KB run buffer:
+<pre>
+ 16-byte key: 256KB/20=13107  13107*256KB=3.2 GB (13107*13107=171+ million keys)
+196-byte key: 256KB/200=1310   1310*256KB=327 MB ( 1310* 1310=1.7+ million keys)
+</pre>
+To get a rough idea of the max number of keys for a file system that allows only 2GB files:
+1) take the max file size, 2) divide by the node size to get the number of nodes, and
+3) multiply the number of nodes by the max number of keys per node (make that max number of keys
+minus one, since reindex always leaves one free key slot per node).  So, if the max file size is
+2GB, using a 1 KB node size, and there are 42-1 keys per node (16-byte key), that gives about
+85 million 16-byte keys for a 2GB file size.  On a node, unlike a run buffer, keys also have node
+pointers, using up 4 bytes, so you will see less keys in an index file than can be put in a runs
+file.
+<p>
+For 10s of millions of <em>very long</em> keys an even larger buffer size can be used, so long as the
+file system supports files that large.
+<p>
+Also, with large run buffers performance usually increases because fewer runs are needed,
+but keep in mind that the run buffer size is also the file I/O size.
+<p>
+Another thing to keep in mind, with run buffer size, is the rate at which you get a callback from
+the reindex routine.  The larger the buffer used the fewer callbacks you get.  This usually won't
+be a concern in multithreaded applications (a callback isn't needed; KH.reindexPct can be used
+for a percent-done status box), and not in 16-bit builds because the buffer is already limited
+to a rather small size, allowing for plenty of callbacks for large files.  For small files, the
+reindex will be finished in a blink of the eye.
+<p>
+The file size (not run buffer) calculations above are based on reindex leaving just one free
+key slot per node.  You can specify in the reindex call the packing percentage to be
+performed. Usually, using 0 (the same as 100 percent) is best since that puts as many keys as
+possible on a node.  However, future inserts into this index file will start splitting almost
+immediately, so you may prefer to instead specify a less-full packing percent.  50% is the minimum,
+though 80% is probably a better low-end.  With more free key slots on nodes, your insert
+performance will likely be much better.  The trade-off is that the file is bigger, and read
+performance is probably lower than it would be with fully-packed nodes.
+<br>
+<br>
+<br>
+<p>
+<center><font size=-1>All content Copyright &copy; 1999 Cornel Huth.  All rights reserved.</font></center>
+</body>
+</html>

@@ -1,0 +1,95 @@
+<html>
+<head>
+<title>Bullet 3.0 [Tutorial:  Examples]</title>
+</head>
+<body>
+<h3>Tutorial:  Examples</h3>
+<br>
+<a href="tutor.htm">&lt;&nbsp;Prev</a>&nbsp;&nbsp;<a href="_toc.htm">TOC</a>&nbsp;&nbsp;<a href="tutpetdb.htm">Next&nbsp;&gt;</a>
+<p>
+The distribution package has source to several example programs.  These include:
+<pre>
+  blt3demo.h  The include file for these examples, with the master control #define switch
+  addrecs.c   Adds records to data file
+  addrix.c    Adds records and reindexes, and gets next/prev
+  create.c    Creates data and index files
+  crypto.c    A Crypto callback handler example
+  geteq.c     Get equal, equal or greater, equal or lesser, key for record
+  getfwd.c    Get next
+  getrev.c    Get previous
+  insrecs.c   Insert records and keys
+  liuex.c     Lock, insert, update transaction example
+  lock.c      Lock records and keys
+  lock_rt.c   Lock records and keys with read-through locks
+  memoadd.c   Add a memo record
+  memodel.c   Delete a memo record
+  memoupd.c   Update a memo record
+  open.c      Open data and index files
+  updrecs.c   Update records and keys
+
+  dynaload.c  How to use runtime linking, example of getting Bullet version info
+
+</pre>
+<p>
+These should be built as a project since most use extern calls into at least one other of
+these modules.  Each can be compiled to a stand-alone executable by way of a switch (see
+the blt3demo.h file), which determines which of the modules will have its main() compiled.
+<p>
+For a quick check using the Microsoft 32-bit compiler, from the command line enter
+<pre>
+  cl create.c -D BLT_WIN32 -D TEST_MODULE_CREATE b3w32c30.lib  (b3w32d30.lib for the demo)
+</pre>
+This builds create.exe.  This module is self-contained so does not need any of the other
+source modules.  This file simply creates three, empty files ($DEMO_01.DBF/DBT/IX4).
+<p>
+If you have a compiler/linker that needs to use an OMF import library, use
+<code>b3w32i30.lib</code> (<code>b3w32j30.lib</code> for the demo).  You can also use
+run-time linking (see dynaload.c) instead of an import library.
+<p>
+File dynaload.c is a separate example, and not part of the main example project.  It
+can be built very easily.  First, edit it by changing the platform and DLL name, if
+needed, then
+<pre>
+  cl dynaload.c
+</pre>
+Run dynaload.exe to see the version of Bullet that was used.
+<p>
+In general, to compile/link, include the correct import library for your compiler (COFF
+for Microsoft and most current compilers, OMF for most everybody else) and build away.
+Consult your compiler documentation for specifics, or contact Bullet technical support.
+<p>
+For Windows 32-bit builds, <code>#define BLT_WIN32</code> before including any Bullet header
+file.  Use <code>b3w32c30.lib</code> for COFF compiler/linkers (<code>b3w32d30.lib</code> for
+the demo), and <code>b3w32i30.lib</code> for OMF compiler/linkers (<code>b3w32j30.lib</code>
+for the demo).
+<p>
+For Windows 16-bit builds, <code>#define BLT_WIN16</code> before including any Bullet header
+file.  Use <code>b3w16i30.lib</code> (<code>b3w16j30.lib</code> for the demo).
+<p>
+For OS/2 32-bit builds, <code>#define BLT_OS232</code> before including any Bullet header
+file.  Use <code>b3o32i30.lib</code> (<code>b3o32j30.lib</code> if demo).
+<p>
+For DOSX32 32-bit builds, <code>#define BLT_DOS32</code> before including any Bullet header
+file.  Use <code>b3d32_30.lib</code>.
+<p>
+For DOS16 16-bit builds, <code>#define BLT_DOS16</code> before including any Bullet header
+file.  Use <code>b3d16_30.lib</code>.
+<p>
+<h4>Program Termination</h4>
+<p>
+It's recommended that you use a method to close all open files (especially) for abnormal
+program endings.  One way to ensure that is to create a routine that knows what files are open
+(based on KH/DH data structures) and to close any that are still open when it gains control.
+Use <code>atexit()</code> or a similar exception handler mechanism for this (see your compiler
+documentation, or better still, system documentation for ExitList support).  All that's needed
+is to call <code>BltDataCloseFile/BltIx4CloseFile</code> for those files still open.  It's
+recommended that you close index files before closing their respective data files (<em>ie</em>,
+close IX4 first, then the DBF).  <b>It is extremely important that all Bullet files be properly
+closed before exiting your program</b>.
+<br>
+<br>
+<br>
+<br>
+<center><font size=-1>All content Copyright &copy; 1999 Cornel Huth.  All rights reserved.</font></center>
+</body>
+</html>

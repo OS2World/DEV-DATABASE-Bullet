@@ -1,0 +1,55 @@
+<html>
+<head>
+<title>MyBltDataCrypto</title>
+</head>
+<body>
+<h4>MyBltDataCrypto</h4>
+<br>
+<a href="bltdata.htm">&lt;&nbsp;Prev</a>&nbsp;&nbsp;<a href="_toc.htm">TOC</a>&nbsp;&nbsp;<a href="bltdata.htm">Next&nbsp;&gt;</a>
+<p>
+<pre>
+TBLT_RETC TBLT_CALLBACK MyBltDataCrypto(ULONG mode,
+                                        TBLT_DH *dhPtr,
+                                        VOID *recordPtr,
+                                        ULONG recNo);
+
+
+ mode           I:sub-function to perform
+ dhPtr          I:data file control structure
+ recordPtr      IO:record data
+ recNo          I:number of the record (informational)
+
+</pre>
+<em>Note:</em>  This routine is not part of the base Bullet 3 package but is
+documented here <i>for the record</i>.  An example crypto routine is included in
+the regular distribution (crypto.c).  Once written, a function pointer to the
+crypto routine is assigned to TBLT_DH.cryptoPtr.
+<p>
+This routine encrypts or decrypts the data record, depending on the mode.
+<p>
+The mode parameter varies depending on which Bullet routine calls here:
+<pre>
+ CRYPTO_FROM_RECADD     from BltDataAddRecord()
+ CRYPTO_FROM_XRECADD    (at Add exit)
+ CRYPTO_FROM_RECUPD     from BltDataUpdateRecord()
+ CRYPTO_FROM_XRECUPD    (at Update exit)
+ CRYPTO_FROM_RECGET     from BltDataGetRecord()
+</pre>
+<p>
+For <code>RECADD</code> and <code>RECUPD</code>, the data record should be
+encrypted.  For <code>RECGET</code>, <code>XRECADD</code>, and <code>XRECUPD</code>,
+it should be decrypted.  The data is both read and written to recordPtr.  The size
+of the record is available in dhPtr-&gt;recordLength.  The recNo is provided for
+informational use.  In the case of <code>RECADD/XRECADD</code>, recNo is always 0.
+<p>
+There is no memo crypto since memo I/O is already under total control of
+the programmer.
+<p>
+<em>Return:</em>&nbsp;Non-zero indicates an error, otherwise the data at recordPtr
+has been encrypted or decrypted.
+<br>
+<br>
+<p>
+<center><font size=-1>All content Copyright &copy; 1999 Cornel Huth.  All rights reserved.</font></center>
+</body>
+</html>

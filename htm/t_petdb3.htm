@@ -1,0 +1,818 @@
+<html>
+<head>
+<title>Bullet 3.0 [Tutorial PET DB:  Using Bullet]</title>
+</head>
+<body>
+<h4>Using Bullet</h4>
+<br>
+<a href="t_petdb2.htm">&lt;&nbsp;Prev</a>&nbsp;&nbsp;<a href="_toc.htm">TOC</a>&nbsp;&nbsp;<a href="tutpetdb.htm">Next&nbsp;&gt;</a>
+<p>
+&nbsp;<br>
+Now that the requirements and database structure have been finalized (the hardest part) you
+can begin on the coding that makes it all happen.  The following techniques are covered:
+<ol>
+<li>Creating the data files
+<li>Opening the data files
+<li>Creating and opening the index files
+<li>Writing
+<li>Reading
+<li>Updating
+</ol>
+<p>
+A database is a collection of files used to manage data.  The PET database has three
+data files (plus one memo file belonging to the Bugs table).  Each data file has one
+index file in this database.  Collectively, these files are <em>the database</em>.
+<p>
+<em>Note: Row and Record (and Tuple) are used interchangeably in this document.  They
+are the same thing.  Also, Column and Field (and Attribute) represent the same thing.</em>
+<p>
+Each of the three tables has a different record structure.  This structure corresponds
+exactly to the physical row layout of its table.  When a row is read from a table
+the entire record is retrieved.  Conversely, when a row is written to a table the entire
+record is written.  The C structures below are representations of the specifications set
+in the preceding section.
+<pre>
+ typedef struct _PRODUCT {
+  UCHAR delTag;
+  UCHAR pID[4];
+  UCHAR pVer[5];
+  UCHAR pName[54];
+ } PRODUCT; // 64 bytes, product table
+
+ typedef struct _CUSTOMER {
+  UCHAR delTag;
+  UCHAR cID[9];
+  UCHAR cName[40];
+  UCHAR cAddr[96];
+  UCHAR cPhone[30];
+  UCHAR cEmail[64];
+ } CUSTOMER; // 240 bytes, customer table
+
+ typedef struct _BUGS {
+  UCHAR delTag;
+  UCHAR bID[8];
+  UCHAR bSEQ[4];
+  UCHAR bDate[8];
+  UCHAR bType;
+  UCHAR bPriority;
+  UCHAR bCid[9];
+  UCHAR bStatus;
+  UCHAR bDesc[53];
+  UCHAR bMemo[10];
+ } BUGS; // 96 bytes, bug table
+</pre>
+<p>
+Each DBF data record has a reserved first-byte:  the delete tag.  In normal use
+this is a &lt;space&gt; (ASCII 32) when the record is active and is a star <code>*</code>
+(ASCII 42) when marked as deleted.  It should be initialized to a &lt;space&gt; before
+writing if not otherwise set (by a read of that record, for example).  It may change on
+any read since the delTag reflects the status of the record read.  This delTag byte is
+always stored on disk as the first byte of any record.
+<p>
+<hr align=center width="67%">
+<h5>Creating the Data Files</h5>
+<p>
+In Bullet the data files are created first.  This is a general requirement since
+the index file is closely tied to the data file it indexes.  Specifically, the index
+file's key expression uses field names described only in the data file.  Therefore,
+the data file must already exist and be opened before any of its index files can be
+created (<em>there is an exception to this rule when creating index files for non-DBF
+files</em>).
+<p>
+The following shows the code to create the three data files.
+<pre>
+ TBLT_RETC rc = 0;
+ TBLT_FD *fPtr;      // field list pointer
+
+ // Note: all C operations are considered to succeed in this tutorial
+ // first the product table is created, then the customer and bugs tables
+
+ fPtr = malloc(sizeof(FD) * 3);         // product table has 3 fields
+ memset(fPtr, 0, sizeof(FD) * 3);       // 0-fill
+
+ strcpy(fPtr[0]->fieldName,"PID");
+ fPtr[0]->fieldType = 'C';
+ fPtr[0]->fieldSize.C_fieldLength = 4;
+
+ strcpy(fPtr[1]->fieldName,"PVER");
+ fPtr[1]->fieldType = 'C';
+ fPtr[1]->fieldSize.C_fieldLength = 5;
+
+ strcpy(fPtr[2]->fieldName,"PNAME");
+ fPtr[2]->fieldType = 'C';
+ fPtr[2]->fieldSize.C_fieldLength = 54;
+
+ rc = BltDataCreateFile(0x03, 3, fPtr, "product.dbf", 0, 0); // create product
+ free(fPtr);
+ if (rc) DoError();
+
+
+ fPtr = malloc(sizeof(FD) * 5);         // customer table has 5 fields
+ memset(fPtr, 0, sizeof(FD) * 5);       // 0-fill
+ strcpy(fPtr[0]->fieldName,"CID");
+ fPtr[0]->fieldType = 'C';
+ fPtr[0]->fieldSize.C_fieldLength = 9;
+ strcpy(fPtr[1]->fieldName,"CNAME");
+ fPtr[1]->fieldType = 'C';
+ fPtr[1]->fieldSize.C_fieldLength = 40;
+ strcpy(fPtr[2]->fieldName,"CADDR");
+ fPtr[2]->fieldType = 'C';
+ fPtr[2]->fieldSize.C_fieldLength = 96;
+ strcpy(fPtr[3]->fieldName,"CPHONE");
+ fPtr[3]->fieldType = 'C';
+ fPtr[3]->fieldSize.C_fieldLength = 30;
+ strcpy(fPtr[4]->fieldName,"CEMAIL");
+ fPtr[4]->fieldType = 'C';
+ fPtr[4]->fieldSize.C_fieldLength = 64;
+ rc = BltDataCreateFile(0x03, 5, fPtr, "customer.dbf", 0, 0); // create customer
+ free(fPtr);
+ if (rc) DoError();
+
+ fPtr = calloc(9,sizeof(FD));           // bugs table has 9 fields
+ strcpy(fPtr[0]->fieldName,"BID");
+ fPtr[0]->fieldType = 'C';
+ fPtr[0]->fieldSize.C_fieldLength = 8;
+ strcpy(fPtr[1]->fieldName,"BSEQ");
+ fPtr[1]->fieldType = 'C';
+ fPtr[1]->fieldSize.C_fieldLength = 4;
+ strcpy(fPtr[2]->fieldName,"BDATE");
+ fPtr[2]->fieldType = 'D';
+ fPtr[2]->fieldSize.fs.fieldLength = 8; // always
+ fPtr[2]->fieldSize.fs.fieldDC = 0;     // (could just use C_fieldLength if DC==0)
+ strcpy(fPtr[3]->fieldName,"BTYPE");
+ fPtr[3]->fieldType = 'C';
+ fPtr[3]->fieldSize.C_fieldLength = 1;
+ strcpy(fPtr[4]->fieldName,"BP");
+ fPtr[4]->fieldType = 'C';
+ fPtr[4]->fieldSize.C_fieldLength = 1;
+ strcpy(fPtr[5]->fieldName,"BCID");
+ fPtr[5]->fieldType = 'C';
+ fPtr[5]->fieldSize.C_fieldLength = 9;
+ strcpy(fPtr[6]->fieldName,"BST");
+ fPtr[6]->fieldType = 'C';
+ fPtr[6]->fieldSize.C_fieldLength = 1;
+ strcpy(fPtr[7]->fieldName,"BSDESC");
+ fPtr[7]->fieldType = 'C';
+ fPtr[7]->fieldSize.C_fieldLength = 53;
+ strcpy(fPtr[8]->fieldName,"BLDESC");
+ fPtr[8]->fieldType = 'M';
+ fPtr[8]->fieldSize.fs.fieldLength = 10; // always
+ fPtr[8]->fieldSize.fs.fieldDC = 0;
+
+ // has memo field so fileID = 0x8B, so bugs.dbt also created (automatically)
+
+ rc = BltDataCreateFile(0x8B, 9, fPtr, "bugs.dbf", 0, 0); // create bugs
+ free(fPtr);
+ if (rc) DoError();
+</pre>
+Once created, the database files may be opened; the creation itself does not
+open the file.
+<p>
+<hr align=center width="67%">
+<p>
+<h5>Opening the Data Files</h5>
+<p>
+Since the number of fields in each data file is already known for this case example,
+there is no need to call <code>BltDataInfoFile</code> to get the number of fields.
+<p>
+Each open data file requires one TBLT_DH.  TBLT_DH is the control structure for this open
+handle: <em>everything about this open handle is contained in TBLT_DH</em>.  Since TBLT_DH
+is defined with room for just one field descriptor (FD), the number of fields
+<em>minus one</em> needs to be added to the memory request, as shown in the
+<code>calloc()</code> call below (this is why the number of fields must be known
+before opening a DBF).
+<p>
+<pre>
+ TBLT_RETC rc = 0;
+ TBLT_DH *dhProdPtr = 0;
+ TBLT_DH *dhCustPtr = 0;
+ TBLT_DH *dhBugsPtr = 0;
+
+ dhProdPtr = calloc(1,sizeof(TBLT_DH) + (32 * (3-1)));  // 32 bytes per field descriptor
+ dhCustPtr = calloc(1,sizeof(TBLT_DH) + (32 * (5-1)));  // calloc, or use memset to 0-fill allocation
+ dhBugsPtr = calloc(1,sizeof(TBLT_DH) + (32 * (9-1)));  // sizeof TBLT_FD is 32 bytes
+
+ strcpy(dhProdPtr->filenamePtr,"product.dbf");
+ dhProdPtr->asMode = (OPENFLAGS_NOCRIT | OPENFLAGS_DENY_NONE | OPENFLAGS_ACCESS_RW);
+ dhProdPtr->noFields = 3;
+ rc = BltDataOpenFile(dhProdPtr,0);
+ if (rc) DoError();
+
+ strcpy(dhProdPtr->filenamePtr,"customer.dbf");
+ dhCustPtr->asMode = (OPENFLAGS_NOCRIT | OPENFLAGS_DENY_NONE | OPENFLAGS_ACCESS_RW);
+ dhCustPtr->noFields = 5;
+ rc = BltDataOpenFile(dhCustPtr,0);
+ if (rc) DoError();
+
+ strcpy(dhProdPtr->filenamePtr,"bugs.dbf");
+ dhBugsPtr->asMode = (OPENFLAGS_NOCRIT | OPENFLAGS_DENY_NONE | OPENFLAGS_ACCESS_RW);
+ dhBugsPtr->noFields = 9;
+ rc = BltDataOpenFile(dhBugsPtr,0);
+ if (rc) DoError();
+</pre>
+In the above code, several of the TBLT_DH members were assigned before the open call.
+The noFields member must be set to <em>at least</em> the actual number of fields in
+the DBF file or the open fails (the count is verified by Bullet).  The noFields count may
+be greater than the actual field count, though this would result in wasted memory since
+the extra FDs, which were allocated for in the calloc() call, are not needed.  In any case,
+after the open call the noFields member has the actual field count (set by Bullet).
+<p>
+<hr align=center width="67%">
+<p>
+<h5>Creating and Opening the Index Files</h5>
+Before an index file can be created the data file it is to index must be open (except
+as noted in the supplemental documentation), as already described above.  Each of the
+three data files created and opened previously is to have a single index (total of three
+index files), as specified in the preceding section (database structure).
+<p>
+The product table is indexed on PID+PVER (product ID and product version).  Since
+the product version is alphanumeric SORT_NLS is used, though SORT_ASCII likely would
+do fine.  Duplicates are not allowed.  SUBSTR() is used in the key expression to
+remove the trailing 0T ('\0') of the key field components.
+<p>
+<em>Note:</em> Some xBase data files' character fields will not have a 0T but instead
+be space-filled to the end of the field.  To find the end of the string you would have
+to scan backward from the end of the field back to the first non-space character, which
+would be the last character of the string.  Bullet won't care if there is or is not a 0T
+in a character field, but your code probably will care.  If you have to deal with non-0T
+strings a trim() function, one that returns a 0T string, would be useful.
+<pre>
+ TBLT_RETC rc = 0;
+ TBLT_KH *khProdPtr = 0;
+ TBLT_KH *khCustPtr = 0;
+ TBLT_KH *khBugsPtr = 0;
+
+ khProdPtr = calloc(1,sizeof(TBLT_KH));  // nodesize is 512 so TBLT_KH is already sized correctly
+ khCustPtr = calloc(1,sizeof(TBLT_KH));  // calloc, or use memset to 0-fill allocation
+ khBugsPtr = calloc(1,sizeof(TBLT_KH));
+
+ rc = BltIx4CreateFile(512,SORT_NLS, 0,0,0,
+                       "SUBSTR(PID,1,3)+SUBSTR(PVER,1,4)",
+                       dhProdPtr,
+                       "product.ix4",
+                       0,0,0);
+
+ if (rc == 0) {
+    strcpy(khProdPtr->filename,"product.ix4");
+    khProdPtr->asMode = (OPENFLAGS_NOCRIT | OPENFLAGS_DENY_NONE | OPENFLAGS_ACCESS_RW);
+    khProdPtr->nodeSize = 512;
+    khProdPtr->xbLinkPtr = dhProdPtr;
+    rc = BltIx4OpenFile(khProdPtr,0);
+ }
+ if (rc) DoError();
+</pre>
+The customer table is indexed on CID, which is generated at data entry by the
+program and is based on the customer's last name (first 4 characters), first name
+(initial), and zip code (first three characters, or 999 if no postal code).
+Duplicates are not allowed.  It's possible that a duplicate CID could be generated,
+though likely in this database only if, say, Hank Williams Sr. and Jr., living
+in the same zipcode, are customers.  To deal with this problem (duplicate CIDs)
+a sequence number can be assigned to identical CIDs, as is done in the Bugs table
+index.  For this data file it is assumed that duplicate CIDs cannot occur (for
+the sake of tutorial-simplicity).
+<p>
+It's better to pull CID out and create a separate field (filled in by the program when
+entering the customer's information) rather than leaving the key to be built as a
+composite key on those three field parts, with no actual CID field.  Better because
+it's simpler to deal with (and especially so with respect to referential integrity)
+and it's more natural to have an actual customer ID number (field) available in the
+record.
+<pre>
+ rc = BltIx4CreateFile(512,SORT_NLS, 0,0,0,
+                       "SUBSTR(CID,1,8)",
+                       dhCustPtr,
+                       "customer.ix4",
+                       0,0,0);
+
+ if (rc == 0) {
+    strcpy(khCustPtr->filename,"customer.ix4");
+    khCustPtr->asMode = (OPENFLAGS_NOCRIT | OPENFLAGS_DENY_NONE | OPENFLAGS_ACCESS_RW);
+    khCustPtr->nodeSize = 512;
+    khCustPtr->xbLinkPtr = dhCustPtr;
+    rc = BltIx4OpenFile(khCustPtr,0);
+ }
+ if (rc) DoError();
+</pre>
+<p>
+The bugs table is indexed on BID+BSEQ.  BID is the product ID plus the product ID's
+version (<em>ie</em>, the exact product).  For example, if product ID 401, version
+1200 (as in 12.00) has a bug report called in, then the BID for the bugs table is
+4011200.  Since there can be more than one bug for this BID a sequence number is
+also used, so that the first time this BID is entered into this table it has a BSEQ
+of 1, or in this case "001" since the BSEQ field is a character field (C string).
+The key (BID+BSEQ) for this entry would be "4011200001".  BSEQ is generated at
+data entry by the program and is based on the (highest) previous BSEQ for this BID,
+if any, plus 1, as described previously.
+<pre>
+ rc = BltIx4CreateFile(512,SORT_NLS, 0,0,0,
+                       "SUBSTR(BID,1,8)+SUBSTR(BSEQ,1,3)",
+                       dhBugsPtr,
+                       "bugs.ix4",
+                       0,0,0);
+
+ if (rc == 0) {
+    strcpy(khBugsPtr->filename,"bugs.ix4");
+    khBugsPtr->asMode = (OPENFLAGS_NOCRIT | OPENFLAGS_DENY_NONE | OPENFLAGS_ACCESS_RW);
+    khBugsPtr->nodeSize = 512;
+    khBugsPtr->xbLinkPtr = dhBugsPtr;
+    rc = BltIx4OpenFile(khBugsPtr,0);
+ }
+ if (rc) DoError();
+</pre>
+<p>
+<hr align=center width="67%">
+<p>
+<h5>Writing</h5>
+<p>
+Bullet is record-oriented:  to modify any part of a record, the part of the record
+is modified in memory and the entire record is written to disk.  Individual fields
+are accessed in memory, via a record structure.  For example, to add a product to
+the database just fill in the PRODUCT record structure and insert the record.  Bullet
+has several ways to write to the database, but the top-level built-in method is to
+use <code>BltIx4Insert</code>.  This writes both the data and the index files as a
+transaction.
+<p>
+The following code is lengthy, and while most of the example code is straight-forward,
+the methods used for the Bugs table take a bit of understanding: that one table insert
+requires more than one operation.  Still, once the concept is understood, the process
+can be wrapped up in an app-specific routine that automates the task into just one
+call (or however you want to do it; it's up to you).
+<p>
+The following 150 lines insert into 3 data files, 3 index files, and one memo file,
+using just five <code>Blt*</code> calls: 3 calls to <code>BltIx4Insert</code>, and
+1 each to <code>BltMemoAdd</code> and <code>BltIx4EqualOrLesserKey</code>.
+<p>
+<pre>
+ TBLT_RETC rc = 0;
+ ULONG action;
+
+ PRODUCT recProd;
+ CUSTOMER recCust;
+ BUGS recBugs;
+
+ ULONG recNoProd;
+ ULONG recNoCust;
+ ULONG recNoBugs;
+
+ UCHAR keyBuffProd[8];          // actual key is 7 bytes, add 1 for local 0T
+ UCHAR keyBuffCust[9];          // actual key length is 8 bytes, add 1 for local 0T
+ UCHAR keyBuffBugs[11];         // actual key length is 10 bytes, add 1 for local 0T
+
+ keyBuffProd[7] = 0;            // set the last byte to 0 now, for ease of use
+ keyBuffCust[8] = 0;            // since it makes these buffers C strings
+ keyBuffBugs[10] = 0;
+
+ memset(recProd,0,sizeof(recProd)); // keep it clean
+ memset(recCust,0,sizeof(recCust));
+ memset(recBugs,0,sizeof(recBugs));
+
+ // ----------------------------------
+ // write a PRODUCT record, with index
+
+ recProd.delTag = ' ';          // just one byte
+ strcpy(recProd.pID,"401");
+ strcpy(recProd.pVer,"1200");
+ strcpy(recProd.pName,"UmaNet 12.00");
+
+ // the product table's control info is in khProdPtr, filled in at the open done previously
+
+ rc = BltIx4Insert(khProdPtr, keyBuffProd, &amp;recNoProd, &amp;recProd, &amp;action);
+ if (rc) DoError(rc);
+
+ // at this point the data and index Product files have the new data, and:
+ //
+ //   keyBuffProd has the key that was inserted in the index file
+ //   recNoProd has the record number in which recProd was stored
+ //   action has the action performed
+
+
+ // -----------------------------------
+ // write a CUSTOMER record, with index
+
+ // your* vars are your vars, and would contain, for example, entry field values
+ // you should be aware of the character set in use since the entry field data
+ // will be in the local Windows ANSI codepage, so do any conversion now, if needed
+
+ recCust.delTag = ' ';
+
+ // fill in the CID field
+
+ strncpy(recCust.cID[0],yourLastNameBuffer,4);  // first four of last name
+ strncpy(recCust.cID[4],yourFirstNameBuffer,1); // first initial
+ strncpy(recCust.cID[5],yourPostalCode,3);      // first three of zipcode
+
+ // and the rest
+
+ strcpy(recCust.cName,yourFirstNameBuffer);
+ strcat(recCust.cName," ");
+ strcat(recCust.cName,yourLastNameBuffer);
+
+ strcpy(recCust.cAddr,yourAddrBuffer);
+ strcpy(recCust.cPhone,yourPhoneBuffer);
+ strcpy(recCust.cEmail,yourEmailBuffer);
+
+ rc = BltIx4Insert(khCustPtr, keyBuffCust, &amp;recNoCust, &amp;recCust, &amp;action);
+ if (rc) DoError(rc);
+
+
+ // -------------------------------
+ // write a BUGS record, with index
+
+ recBugs.delTag = ' ';
+
+ // fill in the BID field, again your* data is supplied by you as required
+
+ strncpy(recBugs.bID[0],yourBuggyProdIdInfo,3);
+ strncpy(recCust.bID[3],yourBuggyProdVerInfo,4);
+
+ // and the rest (bSEQ done last)
+
+ strcpy(recBugs.bData,yourDate);
+ recBugs.bType = yourEntryType;
+ recBugs.bPriority = yourPriority;
+
+ strncpy(recBugs.bCID[0],yourLastNameBuffer,4);  // first four of last name
+ strncpy(recBugs.bCID[4],yourFirstNameBuffer,1); // first initial
+ strncpy(recBugs.bCID[5],yourPostalCode,3);      // first three of zipcode
+
+ recBugs.bStatus = yourStatus;
+ strcpy(recBugs.bDesc,yourShortDescBuffer);
+ strcpy(recBugs.cPhone,yourPhoneBuffer);
+ strcpy(recBugs.cEmail,yourEmailBuffer);
+
+ if (strlen(yourLongDescBuffer)) {
+
+    // if a long description was entered, add it to the memo file now
+
+    ULONG memoNo = 0;
+    UCHAR tmpBuffer[16];        // used for sprintf buffer
+
+    rc = BltMemoAdd(dhBugsPtr,
+                    strlen(yourLongDescBuffer)+1, /* size it to include the 0T */
+                    strlen(yourLongDescBuffer)+1, /* write same count as size */
+                    yourLongDescBuffer,
+                    &amp;memoNo,
+                    0);
+
+    // set bMemo to the memo number (convert to text)
+
+    if (rc == 0) {
+       sprintf(tmpBuffer,"%10.10u",memoNo);     // sprintf writes an unwanted 0T...
+       strncpy(recBugs.bMemo,tmpBuffer,10);     // copy 10 bytes (no 0T so use strncpy)
+    }
+    else {
+       DoError(rc);
+    }
+ }
+ else {
+
+    // no long description so space-out the memoNo field
+
+    strncpy(recBugs.bMemo,"          ",10);     // strncpy since 10 bytes exactly
+ }
+
+ // -------------- - - - - - - - - - - - - - - - - - - -
+ // determine BSEQ so that recBugs.bSEQ field can be set
+ // could use BltIx4GetEqualOrLesser(), but that requires data file access
+ // (and a separate record buffer since recBugs is in use right now), so
+ // BltIx4EqualOrLesserKey() is used, which only requires a key buffer
+ // -- while there's no nice, separate field, the key format is well-defined
+ // so you can just use atol() on the BSEQ part of the key (if there is one)
+ // (Bugs' index key is BID (7 bytes) + BSEQ (3 bytes))
+
+ strcpy(keyBuffBugs,recBugs.bID);       // .bID is C string
+ strcat(keyBuffBugs,"999");             // search for last possible (impossible as it is)
+
+ recNo = 0;     // actually, recNo only used for searching if SORT_DUPS_ALLOWED
+
+ rc = BltIx4EqualOrLesserKey(khBugsPtr, keyBuffBugs, &amp;recNo);
+ if (rc == 0) {
+
+    // check if BID match since ...lesser... simply means any lesser
+    // note: be aware of possible codepage/case difference in strncmp() use
+
+    if (strncmp(keyBuffBugs,recBugs.bID,7)==0) {  // still '4011200'?
+
+       // matches so already have at least one entry for this BID
+       // get the last one's BSEQ and increment one for this records BSEQ
+       
+       // keyBuffBugs[10] = 0 from above
+
+       ULONG tVar = atol(&amp;keyBuffBugs[7]);  // BSEQ key component at offset +7 in key buffer
+       tVar++;                              // bump to next count
+       if (tVar > 998) DoError(999);        // hopefully will never reach 999!
+       sprintf(recBugs.bSEQ,"%3.3u",tVar);  // bSEQ is a C string field so sprintf() is okay
+    }
+    else {
+       rc = EXB_KEY_NOT_FOUND;
+    }
+ }
+
+ if (rc == EXB_KEY_NOT_FOUND) {
+    rc = 0;                     // perfectly fine
+    strcpy(recBugs.bSEQ,"001"); // this is the first entry for this BID
+ }
+
+ if (rc == 0) {
+    rc = BltIx4Insert(khBugsPtr, keyBuffBugs, &amp;recNoBugs, &amp;recBugs, &amp;action);
+ }
+
+ if (rc) {
+
+    // if the insert failed (or the BSEQ search), either correct
+    // the failure and retry, or if the error cannot be corrected,
+    // be sure to DELETE the memo if one was added above
+
+    DoError(rc);
+ }
+</pre>
+<p>
+<hr align=center width="67%">
+<p>
+<h5>Reading</h5>
+<p>
+The database is using normalized tables.  What this means is that each row
+in each table contains data that is dependent on the primary key for that
+row.  Data that is not dependent on the primary key doesn't belong in a
+normalized table.  For example, the product table contains the product
+name.  This field, the name, is dependent on PID+PVER.  Same with the Customer
+and Bugs tables; all their fields are dependent on the primary key.
+<p>
+It would be possible to just have one big Bugs table and add the product name,
+customer name, address, and so on to each row.  However, doing so means that data
+is duplicated unnecessarily, and makes maintenance difficult.  Imagine having to
+store the customer information in each Bugs' record.  As mentioned, one requirement
+of a normalized table is that all data in a record is to be dependent on the primary
+key.  The primary key of the bugs table is BID+BSEQ.  The customer's address has
+nothing to do with this key (it really doesn't) so this type of table would not be
+a normalized table.  There are other requirements, and also different forms of
+normalization.  These and other requirements of relational databases are already
+well-documented in books written by Chris Date (C.J. Date), and others.
+<p>
+Given that the data is normalized it may be necessary to read more than just
+one table to get a full reporting of the database.  For example, to list all
+bug reports made, with full reporting including the product and customer names
+(say), requires that all three tables be accessed.  For each record in the bug
+table, lookups into both the product and customer tables are needed to get the
+product and customer names:  the bug table has only the product ID and version
+(bug.BID), and the customer ID (bug.BCID), but this is all that's need to find
+the names in the Product and Customer tables.  Since index files are available
+for both these (product and customer) these will be used to quickly find the
+product and customer info needed in the report.  The code following uses this
+technique.  One thing to keep in mind when designing a database:  let
+common-sense be your guide.  It works.
+<p>
+This report is a listing of the bugs table, in BID+BSEQ order, with the product
+name and customer name as part of the output.  The database is ready for access
+from the work done above.
+<p>
+<pre>
+ rc = BltIx4GetFirst(khBugsPtr, keyBuffBugs, &amp;recNoBugs, &amp;recBugs);
+ while (rc == 0) {
+
+    // also read product and customer tables (using khProdPtr, khCustPtr...)
+
+    strcpy(keyBuffProd,recBugs.bID);   // set key buffers to foreign keys' values
+    strcpy(keyBuffCust,recBugs.bCid);  // which will be found by the GetEqual calls
+
+    // using the foreign keys these next two calls get the
+    // data records of this Bugs row's product and customer
+
+    rc = BltIx4GetEqual(khProdPtr, keyBuffProd, &amp;recNoProd, &amp;recProd);
+    if (rc == 0) rc = BltIx4GetEqual(khCustPtr, keyCustProd, &amp;recNoCust, &amp;recCust);
+    if (rc) break;
+
+    // at this point all three data records have been read (recBugs, Prod, Cust)
+    // this example simply prints the product name, the customer name, and the date
+    // but anything and everything in these three data records could be shown...
+
+    printf("%s, %s, %8s \n",recProd.pName, recCust.cName, recBugs.bDate); // bDate has no 0T
+
+    // get the next bugs row and continue while more
+
+    rc = BltIx4GetNext(khBugsPtr, keyBuffBugs, &amp;recNoBugs, &amp;recBugs);
+ }
+ if (rc == EXB_END_OF_FILE) rc = 0;     // normal exit condition
+ if (rc) DoError(rc);
+</pre>
+<p>
+That's all there is to it.  You can have any number of relations (a foreign key
+connection into another table is a 'relation'), among any number of tables.  You can
+probably imagine the possibilities of turning globs of data into, finally, useful
+information.  It's very easy once you get the hang of it, and if you are new to
+relational database constructs, a book on designing relational databases is a good
+first step.  There's no real need to know the ins and outs of relational theory,
+but you have to know about table normalization, foreign keys, and database
+integrity.  Once you get a firm grasp of the concepts, the power to extend the
+database to whatever you want is just a matter of designing it.  For example, if you
+want to list all bug reports in customer order you could create an <em>ah hoc</em>
+index on the bugs.bCid field, allowing duplicates if you cared to, and list the report
+by customer ID (and just as easily list by priority, or date+priority, and so on).  Since
+Bullet can create index files so quickly (typically just a second or two for 100,000
+records), you can create and drop (delete) indexes as you need them, in just seconds.
+<p>
+<hr align=center width="67%">
+<p>
+<h5>Updating</h5>
+Updating a database.  Sounds simple, but there are a few precautions that you, as
+the Bullet database designer, need to take into account.  For example, in the above
+Bugs report listing, it is an error for a foreign key access to fail due to a
+key not found error.  If the BUGS.bCid field (the foreign key into the customer table)
+has 'NaugP782' in it, it must be that there is a primary key with that exact value
+in the customer table.  If there is not that is a <em>referential integrity</em> error,
+an error that is not allowed in relational database design.  If this did happen,
+it likely was caused by a modification (an update) to the database that deleted the
+customer.  To prevent this from happening, the database must be designed so that before
+any customer record can be deleted that there are no references to this customer in
+the Bugs table.  Referential integrity states that for each foreign key, there must
+exist a primary key in a table (including the same table, even) that matches that
+foreign key.  When using Bullet, it is the database designer's responsibility to ensure
+that this is always true.  In some designs this won't be a problem since it won't come
+up, but in others it is.
+<p>
+Note:  Sharp readers have already noticed that the primary key for the Customer table
+is built partly on the customer's zip code.  If the customer moves to a new zip code,
+and so has his Customer data zipcode field changed, and therefore also the primary key,
+it presents the problem of having the old CID (foreign key) in the Bugs table being
+stale (no primary key for it anymore).  There are several possible solutions to this
+problem:  one is to create a new customer entry for this new zip code and leave the
+old as-is (workable, but not perfect); another is to redesign the database so that
+the customer key is not based on the address or similar field (may be too late to
+do that); but probably the best way to deal with this <em>type</em> of problem is to
+propagate the update to the Bugs table so that all Bugs.bCid fields with the old data
+code are updated to the new data.  This is one of the problems that database designers
+solve.
+<p>
+The update example changes the customer's zipcode and shows how to deal with the
+case presented in the note above.
+<p>
+<pre>
+ // ... data entry says that customer NaugP782 has moved to zipcode 783
+ // since this results in a new customer id, the Bugs table needs to
+ // be checked for any and all entries that use the old CID
+ //
+ // There are two ways to do this:  1) sequential search of each Bugs
+ // record.  If the Bugs table is small, that's fast enough.  2) Create
+ // an ad hoc (temporary) index based on the customer ID field in Bugs.
+ // Method #2 is used in this example, even though this table is likely
+ // to have a small record count (fewer than 1000 records).  To Bullet,
+ // a large database is one with 1 million records or more.  A medium
+ // DB would be 100,000 to 1 million, and a small database would have
+ // fewer than 100,000 records.
+
+ BUGS recBugsTmp;
+ ULONG recNoBugsTmp;
+ UCHAR keyBuffBugsTmp[11];      // actual key length is 10 bytes, add 1 for local 0T
+ UCHAR newCid[12];
+ TBLT_KH *khBugsTmpPtr = calloc(1,sizeof(TBLT_KH));
+
+ keyBuffBugsTmp[10] = 0;
+ memset(recBugsTmp,0,sizeof(recBugsTmp));
+
+ // create and open the temporay index on BCID field in Bugs table, dups allowed
+
+ rc = BltIx4CreateFile(512,SORT_NLS | SORT_DUPS_ALLOWED, 0,0,0,
+                       "SUBSTR(BCID,8)",
+                       dhBugsPtr,
+                       "tmp.ix4",
+                       0,0,0);
+
+ if (rc == 0) {
+    strcpy(khBugsTmpPtr->filename,"tmp.ix4");
+    khBugsTmpPtr->asMode = (OPENFLAGS_NOCRIT | OPENFLAGS_DENY_NONE | OPENFLAGS_ACCESS_RW);
+    khBugsTmpPtr->nodeSize = 512;
+    khBugsTmpPtr->xbLinkPtr = dhBugsPtr;
+    rc = BltIx4OpenFile(khBugsTmpPtr,0);
+    if (rc == 0) {
+                              // fill the index with keys
+       UCHAR xKeyBuffer[12];  // in case of error this holds key and recno
+       ULONG xRecNo;          // of where error occurred
+
+       rc = BltFuncIx4Reindex(khBugsTmpPtr, "work.$$$", 100, xKeyBuffer, &amp;xRecNo);
+    }
+ }
+ if (rc) DoError(rc);
+
+ // for each entry for the old customer ID, replace the .bCid field with the new CID
+
+ strcpy(newCid,"NaugP783");          // new CID (for demonstration purpose hard-coded)
+ strcpy(keyBuffBugsTmp,"NaugP782");  // old CID
+
+ rc = BltIx4GetEqual(khBugsTmpPtr, keyBuffBugsTmp, &amp;recNoBugsTmp, &amp;recBugsTmp);
+ while (rc == 0) {
+
+    // modify this Bugs record
+
+    strncpy(recBugsTmp.bCid,newCid,sizeof(recBugsTmp.bCid)); // use strncpy to 0-fill to end
+
+    // Update using the existing (primary key) index file for Bugs, not the tmp index
+    // Note that khBugsPtr is used to write, but khBugsTmpPtr is used to read
+
+    recNoBugs = recNoBugsTmp;   // update this record number (updates record and index)
+
+    rc = BltIx4Update(khBugsPtr, keyBuffBugsPtr, recNoBugs, &amp;recBugsTmp, &amp;action);
+    if (rc) break;
+
+    // now, the Bugs BCID field has been updated with the new zipcode,
+    // and the primary key index has the new key (the old key has been removed)
+
+    // read the next record, in order of the tmp index
+
+    rc = BltIx4GetNext(khBugsTmpPtr, keyBuffBugsTmp, &amp;recNoBugsTmp, &amp;recBugsTmp);
+    if (rc) break;
+
+    // check if still the same (old) customer ID, if not then nothing more to update
+    //
+    // Note: You may need to use BltFuncIx4SortCmp() rather than strcmp(),
+    //       especially for SORT_NLS -- for this tutorial it doesn't matter
+
+    if (strcmp(recBugsTmp.bCid,"NaugP782") != 0) {  // hard-coded for demonstration purpose
+       break;
+    }
+ }
+
+ if (rc == EXB_END_OF_FILE) rc = 0;   // possible rc, but not an error
+
+ // get rid of the tmp index file
+
+ BltIx4CloseFile(khBugsTmpPtr);
+ BltDeleteFile("tmp.ix4");
+
+ if (rc) DoError(rc);
+
+ // The Bugs table has had all old BCID entries for this customer updated
+</pre>
+
+The update of the customer table could be done now, or it could also
+have been done before the Bugs table update -- in either case it is a requirement
+that the cascade update succeed 100%.  If any part of the update failed (after
+repeated attempts) the database must be restored to a consistent (and valid)
+state.  As an example, if the customer table update were performed after the
+Bugs update, and the customer table update failed, the program logic must go
+back and <em>undo</em> all the BCID record changes made by putting back the old
+customer ID in the Bugs.bCid field.  In this particular case, with just the single
+change needed in the customer table, yet possibly multiple changes needed in the
+Bugs table, the designer would probably have updated the customer table first.  If
+that were the case, and a Bugs table update failed, then again, the program logic
+must go back and put back all the previous Bugs.bCid records changed (if any) and
+also put back the old customer ID in the Customer table.<p>
+<pre>
+ // update the Customer table
+
+ strcpy(keyBuffCust,"NaugP782");    // old CID
+
+ rc = BltIx4GetEqual(khCustPtr, keyBuffCust, &amp;recNoCust, &amp;recCust);
+ if (rc == 0) {
+
+    // modify this customer record
+    // the CADDR field change is not shown here, but it too would have the new zipcode
+    // again, this is hard-coded for demonstration purpose, to make it less abstract
+
+    strcpy(yourPostalCode,"78310");             // yourPostalCode used since
+    strncpy(recCust.cID[5],yourPostalCode,3);   // it was also used above
+
+    // Update using the existing (primary key) index file for Customer
+
+    rc = BltIx4Update(khCustPtr, keyBuffCustPtr, recNoCust, &amp;recCust, &amp;action);
+    if (rc) break;
+ }
+ if (rc) {
+    // the Customer update failed so the changes made to the Bugs table
+    // must be backed out by re-updating the Bugs table with the old
+    // CID.  This is not a likely problem, but you should be aware of it.
+
+    DoError(rc);
+ }
+
+ // before ending close all open data and index files
+ // (the calls to BltDataCloseFile and BltIx4CloseFile are not shown)
+
+</pre>
+<p>
+<strong>Note:</strong> The examples in this tutorial did not use locks.  In practical
+use, locking is always required before doing any operation on the database that may
+result in the database getting into an inconsistent state.  For example, if you
+read a record, modify one or more fields, then write the record, it may be that
+between the time you read the record and wrote it, another application (or user)
+had written the record with other data.  When you write the record out you overwrite
+what the other user had just written.  If using locks, you lock before you read,
+do the modifications as needed, then <em>quickly</em>, without delay, write the
+record then unlock.  This way you are assured that the database is as it should be.
+<p>
+If you have the case where you need to read the record but won't be writing it
+back immediately, for example in a reservation system, you could design the
+database so that each record includes a last-modified timestamp/counter field.  In
+this scenario, you read the record and note the time-stamp field.  Later, when you
+are ready to write the record out, you first lock the record, read it again (to a
+different record buffer), compare the last-modified field with the one previously
+read, and if the same, write the record (with the current time-stamp/counter field
+updated).  If the time-stamp differs, you know that your current record is based
+on stale data.  Your program logic deals with this case as needed, which may range
+from "doesn't matter" to "have to restart everything".
+<p>
+<br>
+<br>
+<br>
+<center><font size=-1>All content Copyright &copy; 1999 Cornel Huth.  All rights reserved.</font></center>
+</body>
+</html>

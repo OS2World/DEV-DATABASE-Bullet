@@ -1,0 +1,398 @@
+<html>
+<head>
+<title>Bullet 3.0 [C/C++ types (b3types.h)]</title>
+</head>
+<body>
+<h5>File: b3types.h</h5>
+<br>
+<a href="i_c_def.htm">&lt;&nbsp;Prev</a>&nbsp;&nbsp;<a href="_toc.htm">TOC</a>&nbsp;&nbsp;<a href="i_c_pro.htm">Next&nbsp;&gt;</a>
+<pre>
+//
+// b3types.h
+// 1-Jan-1999
+// Bullet 3 include, structure types and function pointer typedefs
+// Copyright (C)1999 Cornel Huth        http://40th.com/
+//
+// All structure members are packed on optimal boundaries
+//
+
+// ---------------------
+// function ptr typedefs
+
+typedef TBLT_RETC (TBLT_CALLBACK *TBLT_DATACALLBACKPTR)(VOID *dhPtr, ULONG info);
+typedef TBLT_RETC (TBLT_CALLBACK *TBLT_DATACRYPTOPTR)(ULONG mode, VOID *dhPtr, VOID *recordPtr, ULONG recNo);
+
+typedef TBLT_RETC (TBLT_CALLBACK *TBLT_IX4CALLBACKPTR)(VOID *khPtr, ULONG info);
+typedef TBLT_RETC (TBLT_CALLBACK *TBLT_IX4CRYPTOPTR)(ULONG mode, VOID *khPtr, VOID *keyPtr, ULONG recNoPlus);
+typedef TBLT_RETC (TBLT_CALLBACK *TBLT_IX4SORTPTR)(VOID *khPtr, VOID *bufferPtr, ULONG count);
+typedef TBLT_CMPC (TBLT_CALLBACK *TBLT_IX4SORTCMPPTR)(VOID *khPtr, VOID *arg1ptr, VOID *arg2ptr, VOID *hvBufferPtr, ULONG hasRecNo);
+typedef TBLT_CMPC (TBLT_CALLBACK *TBLT_IX4USERSORTCMPPTR)(VOID *khPtr, VOID *arg1ptr, VOID *arg2ptr, VOID *hvBufferPtr, ULONG hasRecNo);
+typedef TBLT_RETC (TBLT_CALLBACK *TBLT_IX4BUILDKEYPTR)(VOID *khPtr, VOID *recordPtr, VOID *keyPtr);
+typedef TBLT_RETC (TBLT_CALLBACK *TBLT_IX4PARSEEXPPTR)(VOID *khPtr, ULONG *keyLenPtr);
+typedef TBLT_RETC (TBLT_CALLBACK *TBLT_IX4BTREEPTR)(ULONG func, VOID *khPtr, VOID *keyPtr, ULONG recNo);
+typedef TBLT_RETC (TBLT_CALLBACK *TBLT_IX4REINDEXPTR)(VOID *khPtr, VOID *workFilePtr, ULONG nodePackPct, VOID *keyPtr, ULONG *recNoPtr);
+
+
+// --------------
+// auxiliary pack
+
+typedef TBLT_RETC (TBLT_EXP *LL_IOCLOSEFILE)(TBLT_HANDLE handle);
+typedef TBLT_RETC (TBLT_EXP *LL_IOCREATEDIR)(TBLT_FNCHAR *dirnamePtr);
+typedef TBLT_RETC (TBLT_EXP *LL_IOCREATEFILE)(TBLT_FNCHAR *filenamePtr);
+typedef TBLT_RETC (TBLT_EXP *LL_IODELETEFILE)(TBLT_FNCHAR *filenamePtr);
+typedef TBLT_RETC (TBLT_EXP *LL_IOMOVEFILE)(TBLT_FNCHAR *currNamePtr, TBLT_FNCHAR *newNamePtr);
+typedef TBLT_RETC (TBLT_EXP *LL_IOOPENFILE)(TBLT_FNCHAR *filenamePtr, ULONG mode, TBLT_HANDLE *handlePtr);
+typedef TBLT_RETC (TBLT_EXP *LL_IOREADFILE)(TBLT_HANDLE handle, ULONG *bytesPtr, VOID *bufferPtr);
+typedef TBLT_RETC (TBLT_EXP *LL_IOSEEKFILE)(TBLT_HANDLE handle, ULONG mode, TBLT_FO *posPtr);
+typedef TBLT_RETC (TBLT_EXP *LL_IOUPDATEDIRENTRY)(TBLT_HANDLE handle);
+typedef TBLT_RETC (TBLT_EXP *LL_IOWRITEFILE)(TBLT_HANDLE handle, ULONG *bytesPtr, VOID *bufferPtr);
+typedef TBLT_RETC (TBLT_EXP *LL_IOLOCKFILE)(TBLT_HANDLE handle, ULONG mode, TBLT_FO *lockOffsetPtr, TBLT_FO *lockBytesPtr, ULONG timeout);
+typedef TBLT_RETC (TBLT_EXP *LL_IOISREMOTE)(TBLT_HANDLE handle, ULONG drive, ULONG *isRemotePtr, ULONG *flagsPtr);
+
+typedef struct _BLTAUXPACK {
+ ULONG  entries;                        // 000 entries in this auxpack (12)
+ ULONG  flags;                          // 004 bit0=1 then 64-bit file offsets used for TBLT_FO data
+ LL_IOCLOSEFILE   xioCloseFile;         // 008 -01
+ LL_IOCREATEDIR   xioCreateDir;         // 012 -02
+ LL_IOCREATEFILE  xioCreateFile;        // 016 -03
+ LL_IODELETEFILE  xioDeleteFile;        // 020 -04
+ LL_IOMOVEFILE    xioMoveFile;          // 024 -05
+ LL_IOOPENFILE    xioOpenFile;          // 028 -06
+ LL_IOREADFILE    xioReadFile;          // 032 -07
+ LL_IOSEEKFILE    xioSeekFile;          // 036 -08
+ LL_IOUPDATEDIRENTRY xioUpdateDirEntry; // 040 -09
+ LL_IOWRITEFILE   xioWriteFile;         // 044 -10
+ LL_IOLOCKFILE    xioLockFile;          // 048 -11
+ LL_IOISREMOTE    xioIsRemote;          // 052 -12
+} TBLT_AUXPACK;
+
+
+// ---------------
+// DBF header info
+// first 32 bytes of DBF file
+
+typedef struct _BLTDBFINFO {
+ UCHAR  fileID;         // 000 file id byte (this is the first 32 bytes of a DBF file)
+ UCHAR  lastUpdateYR;   // 001 binary
+ UCHAR  lastUpdateMO;   // 002 binary
+ UCHAR  lastUpdateDA;   // 003 binary
+ ULONG  noRecords;      // 004 total number of records
+ USHORT headerLength;   // 008 length of data header
+ USHORT recordLength;   // 010 record length
+ USHORT nada;           // 012 reserved
+ UCHAR  xactionFlag;    // 014 flag indicating incomplete dBase transaction
+ UCHAR  encryptFlag;    // 015 flag indicating encrypted
+ UCHAR  filler[16];     // 016 fill to 32 bytes
+} TBLT_DBFINFO;         //  32 bytes
+
+
+typedef union _BLTFIELDSIZE {
+ struct {
+    UCHAR fieldLength;  // 016 1-255 bytes (if 0 then altFieldLength used)
+    UCHAR fieldDC;      // 017 places right of decimal point
+ } fs;                  //     (fs name needed by compilers that don't accept unnamed unions)
+ USHORT C_fieldLength;  // 016 1-32000 (for C (character) fields only) (254 is recommended max)
+} TBLT_FIELDSIZE;       //   2 bytes
+
+
+typedef struct _BLTFD { // field descriptor
+ UCHAR  fieldName[11];  // 000 ASCII/OEM, UPPER, underscore, zero-filled, (0T)
+ UCHAR  fieldType;      // 011 UPPER characters: C,N,D,L,M (F,G,B) [Y,3,4,5,6,7,8]
+ ULONG  fieldDA;        // 012 field start offset (delete tag=0, fld1=1, fld2=fld1+fld1's size..., non-std)
+ TBLT_FIELDSIZE fieldSize; // 016 (see union above)
+ USHORT altFieldLength; // 018 if FD.fieldLength=0 then altLength is used (64K) (obsolete, use C_fieldLength)
+ UCHAR  filler[12];     // 020 not used
+} TBLT_FD;              //  32 bytes
+
+
+// -------------------
+// DataHeader template
+//
+// The fd array at the end of _TBLT_DH does not declare any data space
+// other than 1 field descriptor (refer to examples for proper use)
+
+typedef struct _BLTDH {
+ ULONG  fType;          // 000  bit0=1 for DBF data file, XB
+ ULONG  flags;          // 004  bit0=1 is dirty
+                        //      bit1=1 full lock (count stored in TBLT_DH.lockCount)
+                        //      bit2=1 full shared lock (if bit1=1)
+                        //      bit3=1 read-through lock (maxFileSize effectively cut in half)
+                        //      bit4=1 skip over deleted records in BltIx4Get*() routines
+                        //      bit5=1 header is locked (count stored in TBLT_DH.hdrLockCount)
+                        //      bit6=1 header shared locked (if bit5=1)
+                        //      bit7=1 handle is read-only
+                        //      bit8-31 reserved (=0)
+ TBLT_HANDLE handle;    // 008  file handle
+ ULONG  asMode;         // 012  access-sharing mode of open
+ ULONG  noFields;       // 016  number of fields in this data file
+ TBLT_FNCHAR *filenamePtr; // 020  filename at open, PSZ
+ TBLT_HANDLE mutexHandle;  // 024  mutex handle
+                        //
+                        //      memo file header
+ ULONG  memoAvailBlock; // 028  next available block (header is block 0)
+ ULONG  memoUnk1;       // 032  not used
+ UCHAR  memoFilename[8];// 036  filename proper (first 8 of filename proper)
+ ULONG  memoUnk2;       // 044  not used
+ ULONG  memoBlockSize;  // 048  block size, must be at least 24 to cover header! and less than 64K
+                        //
+                        //      memo file control
+ TBLT_HANDLE memoHandle;// 052  handle of open memo file
+ ULONG  memoFlags;      // 056  bit0=1 is dirty, bit1=1 B2 compatible deleted sizes
+ ULONG  memoLastNo;     // 060  last accessed memo number (if not 0)
+ ULONG  memoLastLink;   // 064  link data for last accessed memo
+ ULONG  memoLastSize;   // 068  size of last accessed memo (in bytes, including overhead (8))
+ ULONG  memoHeaderSize; // 072  size of first block
+ UCHAR  memoExt[4];     // 076  extension to use for memo file (def='DBT\0');
+ ULONG  memoInUseFlag;  // 080  default flag value is 0x8FFFF (0x8FFFF used if memoInUseFlag=0)
+                        //
+ ULONG  lockCount;      // 084  only when dec'ed to 0 do full unlock
+ ULONG  hdrLockCount;   // 088  only when dec'ed to 0 do header unlock
+ TBLT_FO maxFileSize;   // 092  see also TBLT_DH.flags, bit3
+#ifndef BLT_FILE64BIT
+ ULONG  maxFileSizeH;   // 096  not used: placeholder when TBLT_FO is 32 bits
+#endif                  //
+ ULONG  packPct;        // 100  percent of sort|pack done (0,1-99)
+ ULONG  userWord;       // 104  user word (available for programmer's use)
+                        //
+                        //      data function pointers
+ TBLT_DATACALLBACKPTR xCallBackPtr; // 108  xCallBackPtr is callback routine for pack (def=0:none)
+ TBLT_DATACRYPTOPTR   xCryptoPtr;   // 112  xCryptoPtr is crypto routine (def=0:none)
+                        //
+ ULONG  rsv116;         // 116  reserved
+ ULONG  rsv120;         // 120  reserved
+ ULONG  rsv124;         // 124  reserved
+                        //
+                        //      state data:
+ ULONG  MPNL;           // 128  max pathname length (def=0, use bullet_MPNL)
+ ULONG  MPCL;           // 132  max pathname component length (def=0, use bullet_MPCL)
+ ULONG  MPXL;           // 136  max pathname extension length (def=0, use bullet_MPXL)
+ ULONG  MASZ;           // 140  max single allocation request size, in bytes, that will be made (def=0, use bullet_MASZ)
+ ULONG  MAM;            // 144  memory allocation strategy (0=default for platform)
+ ULONG  LOMS;           // 148  flag to leave old memo space (1=leave old space as-is, 0=clear it)
+ ULONG  rsv152;         // 152  reserved
+ TBLT_AUXPACK *apPtr;   // 156  auxiliary pack ptr (def=0)
+                        // 160  plus:
+                        //      data file header
+ UCHAR  fileID;         // 000  file id byte
+ UCHAR  lastUpdateYR;   // 001  binary
+ UCHAR  lastUpdateMO;   // 002  binary
+ UCHAR  lastUpdateDA;   // 003  binary
+ ULONG  noRecords;      // 004  total number of records
+ USHORT headerLength;   // 008  length of data header
+ USHORT recordLength;   // 010  record length (includes tag byte)
+ USHORT nada;           // 012  reserved
+ UCHAR  xactionFlag;    // 014  flag indicating incomplete dBASE transaction (bit0=1 DBF, bit1=1 DBT)
+ UCHAR  encryptFlag;    // 015  flag indicating encrypted (not modified by Bullet)
+ UCHAR  rsv16[12];      // 016  reserved
+ UCHAR  rsv28;          // 028  reserved
+ UCHAR  rsv29;          // 029  reserved
+ UCHAR  rsv30[2];       // 030  reserved
+ TBLT_FD fd[1];         // 032  for each field
+} TBLT_DH;              // workspace (160) + header proper (32) + descriptors (32 each) bytes
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+// ---------------
+// IX4 header info
+
+typedef struct _BLTIX4INFO {
+ ULONG  fileID;         // 000  file id  (this is the first 44 bytes of an IX4 file)
+ ULONG  nodeSize;       // 004  size of a node, in bytes (buffer[], at end of TBLT_KH, must be this size)
+ ULONG  rootNode;       // 008  root node (1-based)
+ ULONG  noKeys;         // 012  total number of keys
+ ULONG  availNode;      // 016  next available node (link to, 0 if none, 1-based)
+ ULONG  freeNode;       // 020  next free node (always points to last physical node+1, at end of file)
+ ULONG  keyLength;      // 024  length of key
+ ULONG  maxKeys;        // 028  maximum number of keys on a node: (nodeSize-5)/(keyLen+8) (255=absolute max)
+ ULONG  codePage;       // 032  code page from Ix4CreateFile
+ ULONG  countryCode;    // 036  country code from Ix4CreateFile
+ ULONG  sortCmpCode;    // 040  (see TBLT_KH)
+} TBLT_IX4INFO;         //  44 bytes
+
+
+typedef struct _BLTXLATEX {
+ UCHAR fType;           // 000 field type (see below)
+ UCHAR length;          // 001 bytes to use starting at offset (never GT MAX_KEY_LENGTH)
+ USHORT offset;         // 002 byte offset into data record that length bytes are used
+ USHORT flags;          // 004 flags (bit0=1 upper, bit1=1 descend)
+} TBLT_XLATEX;          //   6 bytes (one xlatex per key component)
+                        // fType:
+                        // std fTypes: C,N,D,L,M
+                        //   extended: F,G,B  (F same as N, G/B same as M)
+                        //   Bullet 3: Y,3,4,5,6,7,8 (binary data fields, see also SORT_MIXED_S16...U64)
+
+
+// ------------------
+// KeyHeader template
+// Composed of: workspace(512)+header(1024)+node buffer(512,1024,1536,2048,2560)=2KB to 4KB TBLT_KH size
+//
+// The node buffer does not declare any data space other than the 512 bytes, but is at end of the
+// TBLT_KH structure so it can be located as part of the regular dynamic allocation (refer to examples
+// for proper use)
+//
+// TBLT_KH.nodeSize (in the ix4 header below) indicates the size of this node buffer (varies by index
+// file; is set by BltIx4CreateFile()).
+
+typedef struct _BLTKH {
+ ULONG  fType;          // 000  bit0=0 for index file, btree
+ ULONG  flags;          // 004  bit0=1 is dirty
+                        //      bit1=1 full lock (count stored in TBLT_KH.lockCount)
+                        //      bit2=1 full shared lock (if bit1=1)
+                        //      bit3=1 read-through lock (maxFileSize effectively cut in half)
+                        //      bit4=1 atomic access
+                        //      bit5-6 reserved (=0)
+                        //      bit7=1 handle is read-only
+                        //      bit8-12 reserved (=0)
+                        //      bit13-15= reserved (=?)
+                        //      bit16-31 reserved (=0)
+ TBLT_HANDLE handle;    // 008  file handle
+ ULONG  asMode;         // 012  access-sharing mode of open
+ TBLT_DH *xbLinkPtr;    // 016  related XB TBLT_DH header
+ TBLT_FNCHAR *filenamePtr; // 020  filename at open, PSZ
+ TBLT_HANDLE mutexHandle;  // 024 mutex handle
+                        //      Btree workspace
+ ULONG  sWork028;       // 028   "
+ ULONG  sWork032;       // 032   "
+ LONG   sWork036;       // 036   "
+ ULONG  sWork040;       // 040   "
+ ULONG  sWork044;       // 044   "
+ ULONG  sWork048[30];   // 048   "
+ ULONG  rsv168;         // 168  reserved
+ UCHAR  *wsPtr;         // 172  additional workspace ptr (released automatically at header flush)
+ TBLT_HANDLE workHandle;// 176  open handle of reindex work file, if not 0
+                        //      history info (since opened or last cleared)
+ ULONG  searches;       // 180  keys searched for
+ ULONG  seeks;          // 184  nodes seeked (sought)
+ ULONG  hits;           // 188  node seeks satisfied without disk access
+ ULONG  keysDeleted;    // 192  keys deleted
+ ULONG  keysStored;     // 196  keys added
+ ULONG  nodesSplit;     // 200  splits needed on insert
+ ULONG  nodesMadeAvail; // 204  nodes made available from deleting keys
+ ULONG  tagMarks;       // 208  used to demark delete tag to exclude/include
+ ULONG  lockCount;      // 212  active full-lock count
+ ULONG  rsv216;         // 216  reserved
+ TBLT_FO maxFileSize;   // 220  see also TBLT_KH.flags, bit3
+#ifndef BLT_FILE64BIT
+ ULONG  maxFileSizeH;   // 224  not used: placeholder when TBLT_FO is 32 bits
+#endif
+ ULONG  reindexPct;     // 228  percent of reindex done (0,1-99)
+ ULONG  userWord;       // 232  user word (available for programmer's use)
+                        //      ix4 function pointers
+ TBLT_IX4CALLBACKPTR    xCallBackPtr;    // 236  xCallBackPtr is callback routine for reindex (def=0:none)
+ TBLT_DATACRYPTOPTR     xCryptoPtr;      // 240  xCryptoPtr is crypto routine (def=0:none)
+ TBLT_IX4SORTPTR        xSortPtr;        // 244  xSortPtr is sort routine (def=0:BltFuncIx4Sort())
+ TBLT_IX4SORTCMPPTR     xSortCmpPtr;     // 248  xSortCmpPtr is sort-compare routine (def=0:BltFuncIx4SortCmp())
+ TBLT_IX4USERSORTCMPPTR xUserSortCmpPtr; // 252  xUserSortPtr is handler for sort-cmp codes 32 and above (def=none)
+ TBLT_IX4BUILDKEYPTR    xBuildKeyPtr;    // 256  xBuildKeyPtr is build-key routine (def=0:BltFuncIx4BuildKey())
+ TBLT_IX4PARSEEXPPTR    xParseExpPtr;    // 260  xParseExpPtr is expression parser (def=0:BltFuncIx4ParseExp())
+ TBLT_IX4BTREEPTR       xBtreePtr;       // 264  xBtreePtr is btree manager (def=0:BltFuncIx4BTM())
+ TBLT_IX4REINDEXPTR     xReindexPtr;     // 268  xReindexPtr is reindex routine (def=0:BltFuncIx4Reindex())
+                        //      state data:
+ ULONG  MPNL;           // 272  max pathname length (def=0, use bullet_MPNL)
+ ULONG  MPCL;           // 276  max pathname component length (def=0, use bullet_MPCL)
+ ULONG  MPXL;           // 280  max pathname extension length (def=0, use bullet_MPXL)
+ ULONG  MARSV;          // 284  bytes to hold back from Bullet reindex routine (def=0, use bullet_MARSV)
+ ULONG  MASZRX;         // 288  max total memory, in bytes, reindex is allowed to allocate (def=0, use bullet_MASZRX)
+ ULONG  MASZ;           // 292  max single allocation request size, in bytes, that will be made (def=0, use bullet_MASZ)
+ ULONG  MAM;            // 296  memory allocation strategy (0=default for platform)
+ ULONG  MMUBR;          // 300  max memory allocation used by reindex, in bytes (R-O)
+ TBLT_AUXPACK *apPtr;   // 304  auxiliary pack ptr (def=0)
+                        //
+ ULONG  currKeyRecNo;   // 308  current rec number assigned to TBLT_KH.currKey (01 00 00 00 = 1)
+ UCHAR  currKey[MAX_KEY_LENGTH]; // 312 current key value (MAX_KEY_LENGTH=196 bytes)
+ UCHAR  zeroT;          // 508  allow 196-byte key to be 0T'ed
+ UCHAR  rsv509;         // 509  internal use
+ UCHAR  rsv510[2];      // 510  reserved
+                        // 512  plus:
+                        //      index file header
+ ULONG  fileID;         // 000  file id
+ ULONG  nodeSize;       // 004  size of a node, in bytes (buffer[], at end of TBLT_KH, must be this size)
+ ULONG  rootNode;       // 008  root node (1-based)
+ ULONG  noKeys;         // 012  total number of keys
+ ULONG  availNode;      // 016  next available node (link to, 0 if none, 1-based)
+ ULONG  freeNode;       // 020  next free node (always points to last physical node+1, at end of file)
+ ULONG  keyLength;      // 024  length of key
+ ULONG  maxKeys;        // 028  maximum number of keys on a node: (nodeSize-5)/(keyLen+8) (255=absolute max)
+ ULONG  codePage;       // 032  code page from CreateIndexFile
+ ULONG  countryCode;    // 036  country code from CreateIndexFile
+ ULONG  sortCmpCode;    // 040  system (1-9, 10-31 reserved) or user (32 to 255) |highbyte has special use
+                        //      high word has flags: bit0=1 dups allowed         | which comes into play when
+                        //                           bit1=0 OEM charset          | a non-DBF file is used
+                        //                           bit1=1 ANSI charset
+                        //                           bit2-15 rez                 
+                        //
+                        //      translated key expression as done by ParseKey during BltIx4CreateFile()
+                        //      for each key part in TBLT_KH.expression a 6-byte structure is used:
+                        //
+                        //       UCHAR  ftype   field type (C,N,L, etc)
+                        //       UCHAR  length  bytes to use starting at offset (never GT MAX_KEY_LENGTH)
+                        //       USHORT offset  byte offset into data record that length bytes are to be used
+                        //       USHORT flags   flags (iff bit15=0 then bit0=1 upper, bit1=1 descend)
+                        //
+ ULONG  xlateCount;     // 044  number of key fields (16 max fields)
+ TBLT_XLATEX xlateExp[16];// 048 key construct info (96 bytes, MAX_KEY_FIELDS*6)
+ ULONG  rsv144;         // 144  reserved
+ ULONG  rsv148;         // 148  reserved
+ UCHAR  xactionFlag;    // 152  flag indicating index file was not flushed (bit0=1 not flushed)
+ UCHAR  rsv153[7];      // 153  reserved
+ UCHAR  rsv160[224];    // 160  reserved
+                        //      (IX4_HDR_SIZE_FLUSH to here (actually flushes 512 bytes))
+ UCHAR  expression[380];// 384  key expression, user (ASCIZ) (same as IX4_MAX_EXP_SIZE)
+ ULONG  STsize;         // 764  size of sort table following (is 0x100 or 0) (first byte is always 0)
+ UCHAR  sortTable[256]; // 768  sort table, fill at index create
+                        //      disk header ends here, at 1024 bytes (first node is at +1024)
+                        //
+ UCHAR  buffer[512];    //1024  node buffer determined at index file create
+} TBLT_KH;              //      512+1024+512 = 2048 bytes (for 512-byte node size)
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+// ---------------
+// misc structures
+
+typedef struct _BLTIUEX {
+ TBLT_KH *khPtr;        // I:KH of index file
+ VOID *keyBufferPtr;    // O:key buffer (separate buffer for each operation)
+ VOID *recordPtr;       // I:record data to add | update with
+ ULONG recNo;           // O:recNo that record data was stored on insert | I:recNo to update
+ ULONG action;          // O:action performed
+ ULONG flags;           // I:operation flags
+ VOID *rsvPtr;          // set to 0 (used internally)
+ VOID *nextPtr;         // I:next TBLT_IUEX, or 0 if no more
+} TBLT_IUEX;
+
+typedef struct _BLTLOCKEX {
+ VOID *khdhPtr;         // I:KH or DH of file
+ ULONG mode;            // I:LOCK_MODE_*
+ ULONG recNoStart;      // I:for DH locks
+ ULONG recCount;        // I:for DH locks
+ ULONG action;          // O:action performed
+ ULONG flags;           // I:operation flags
+ VOID *rsvPtr;          // set to 0 (used internally)
+ VOID *nextPtr;         // I:next TBLT_IUEX, or 0 if no more
+} TBLT_LOCKEX;
+
+
+// check structure packing with design specs
+
+#define OFFSET_KH_BUFFER   1536
+#define OFFSET_DH_FD1       192
+
+#define KH_BUFFER_OFFSET_IS  offsetof(struct _BLTKH, buffer)
+#define DH_FD1_OFFSET_IS     offsetof(struct _BLTDH, fd)
+
+// end b3types.h
+</pre>
+<br>
+<br>
+<br>
+<br>
+<center><font size=-1>All content Copyright &copy; 1999 Cornel Huth.  All rights reserved.</font></center>
+</body>
+</html>

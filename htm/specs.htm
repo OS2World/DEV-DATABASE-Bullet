@@ -1,0 +1,207 @@
+<html>
+<head>
+<title>Bullet 3.0 [Specifications &amp; Y2k Statement]</title>
+</head>
+<body>
+<h3>Specifications &amp; Y2k Statement</h3>
+<br>
+<a href="prolog.htm">&lt;&nbsp;Prev</a>&nbsp;&nbsp;<a href="_toc.htm">TOC</a>&nbsp;&nbsp;<a href="license.htm">Next&nbsp;&gt;</a>
+<p>
+<h4>Year2000 Statement</h4>
+<p>
+All Bullet database toolkits are year2000-compatible.
+&nbsp;<br>
+&nbsp;<br>
+<p>
+<h4>Specifications</h4>
+<p>
+<pre>
+ Data file
+            format: DBF
+          max recs: 2&sup3;&sup2;
+        max recLen: 65,520 bytes
+        max fldLen: 32,000 bytes
+
+ Memo file
+            format: DBT (w/reusable memo space)
+         max memos: 2&sup3;&sup2;
+     max memo size: 2&sup3;&sup2; bytes
+
+ Index file
+            format: IX4 (B<sup>*</sup>-tree)
+    max key length: 196 bytes
+         node size: 512 to 2560 bytes
+         max nodes: 2&sup3;&sup2;
+ max keys per node: 255
+          max keys: 2&sup3;&sup2;+
+
+ Data
+       static data: &lt; 1K bytes      (&lt; 10 global vars, essentially read-only)
+   per data header: &lt; 256 bytes     (user allocated)
+  per index header: 2K to 4K bytes  (user allocated)
+
+ Code
+         code size: &lt; 64K bytes
+
+ Threads
+       max threads: unlimited (limit of operating system and available memory)
+
+ File System
+         max files: unlimited (limit of operating system and available memory)
+          max size: 2&sup3;&sup1; bytes (NT is runtime switchable to 63-bit max size, coming soon)
+
+ Encryption
+    on data record: yes
+      on index key: yes
+       transparent: yes (disk is always encrypted; Blt*() API is always plaintext)
+            method: callback (any crypto can be used, such as Blowfish)
+
+ Calling convention
+         Win32 DLL: stdcall
+         Win16 DLL: PASCAL  (far pointers)
+          OS/2 DLL: syscall
+            DOSX32: cdecl   (Watcom/DOS4Gx)
+            MS-DOS: cdecl   (far pointers)
+
+</pre>
+<b>Built-in data types supported</b>
+<p>
+Standard types:
+<p>
+<table border cellspacing=1 cellpadding=4>
+<tr>
+<th>fieldType
+<th>type
+<th>size
+<th>example
+<th>notes
+<tr>
+<td align=center>C
+<td align=center>character
+<td align=center>1-254 (1-32000)
+<td><code>"40th Floor"</code>
+<td>with or without 0T
+<tr>
+<td align=center>N
+<td align=center>numeric
+<td align=center>1-18
+<td align=right><code>'&nbsp;&nbsp;123.45'</code>
+<td>right-justified, decimal-aligned, no 0T
+<tr>
+<td align=center>D
+<td align=center>date
+<td align=center>8
+<td><code>'20001231'</code>
+<td>YYYYMMDD, no 0T
+<tr>
+<td align=center>L
+<td align=center>logical
+<td align=center>1
+<td><code>'T'</code>
+<td>T,F,t,f,Y,N,y,n,&lt;space&gt;
+<tr>
+<td align=center>M
+<td align=center>memo
+<td align=center>10
+<td><code>'0000000001'</code>
+<td>memo #, blank if none, leading 0s or &lt;spaces&gt;, no 0T
+</table>
+<p>
+<br>
+Common extended types:
+<p>
+<table border cellspacing=1 cellpadding=4>
+<tr>
+<th>fieldType
+<th>type
+<th>size
+<th>example
+<th>notes
+<tr>
+<td align=center>F
+<td align=center>numeric
+<td align=center>1-18
+<td align=right><code>'&nbsp;&nbsp;123.45'</code>
+<td>same as N
+<tr>
+<td align=center>B
+<td align=center>memo
+<td align=center>10
+<td><code>'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2'</code>
+<td>binary memo field; same as M
+<tr>
+<td align=center>G
+<td align=center>memo
+<td align=center>10
+<td><code>'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'</code>
+<td>general memo field; same as M
+</table>
+<p>
+<br>
+Bullet 3.0 extended types:
+<p>
+<table border cellspacing=1 cellpadding=4>
+<tr>
+<th>fieldType
+<th>type
+<th>size
+<th>example
+<th>notes
+<tr>
+<td align=center><code>SORT_MIXED_S16</code> ('3')
+<td align=center>signed short
+<td align=center>2
+<td align=center><code>SHORT</code>
+<td>requires SORT_MIXED sortCmpCode
+<tr>
+<td align=center><code>SORT_MIXED_U16</code> ('4')
+<td align=center>unsigned short
+<td align=center>2
+<td align=center><code>USHORT</code>
+<td>requires SORT_MIXED sortCmpCode
+<tr>
+<td align=center><code>SORT_MIXED_S32</code> ('5')
+<td align=center>signed long
+<td align=center>4
+<td align=center><code>LONG</code>
+<td>requires SORT_MIXED sortCmpCode
+<tr>
+<td align=center><code>SORT_MIXED_U32</code> ('6')
+<td align=center>unsigned long
+<td align=center>4
+<td align=center><code>ULONG</code>
+<td>requires SORT_MIXED sortCmpCode
+<tr>
+<td align=center><code>SORT_MIXED_S64</code> ('7')
+<td align=center>64-bit long
+<td align=center>8
+<td align=center><code>INT64</code>
+<td>requires SORT_MIXED sortCmpCode
+<tr>
+<td align=center><code>SORT_MIXED_U64</code> ('8')
+<td align=center>64-bit unsigned long
+<td align=center>8
+<td align=center><code>UINT64</code>
+<td>requires SORT_MIXED sortCmpCode
+<tr>
+<td align=center><code>SORT_MIXED_DBL</code> ('Y')
+<td align=center>IEEE FP double
+<td align=center>8
+<td align=center><code>DOUBLE</code>
+<td>requires SORT_MIXED sortCmpCode
+</table>
+<p>
+The above types may be used in key fields (alone or mixed) since these fields are intrinsic
+to Bullet.  Any datatype may be used, however, not just those directly supported.
+<p>
+NLS sorting is available, as are SUBSTR, UPPER, and DESCEND modifiers.  Custom key building
+and sort comparisons are available via callbacks.  Callbacks within reindex, sort and pack
+routines are also available (so you can put up a % completed window, or handle the message
+queue in Win3x).  The file system calls may be replaced, letting you handle all disk I/O
+with your own code.
+<br>
+<br>
+<br>
+<center><font size=-1>All content Copyright &copy; 1999 Cornel Huth.  All rights reserved.</font></center>
+</body>
+</html>

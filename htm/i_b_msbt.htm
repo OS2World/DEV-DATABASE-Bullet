@@ -1,0 +1,333 @@
+<html>
+<head>
+<title>Bullet 3.0 [BASIC types (b3msbtyp.bi)]</title>
+</head>
+<body>
+<h5>File: b3msbtyp.bi</h5>
+<br>
+<a href="i_b_msbd.htm">&lt;&nbsp;Prev</a>&nbsp;&nbsp;<a href="_toc.htm">TOC</a>&nbsp;&nbsp;<a href="i_b.htm">Next&nbsp;&gt;</a>
+<pre>
+'
+'  b3msbtyp.bi
+'  1-Jan-1999
+'  Bullet 3 Basic include, structures types for ms basic7/vbdos
+'  Copyright (C)1999 Cornel Huth        http://40th.com/
+'
+'  All pointers are 32-bit (seg:off for real mode)
+'
+'  [NOTE THIS --------------------------------------------------------------]
+'  This .bi is setup for BASIC7 (DOS and OS/2) and later compilers (including VB/DOS)
+'  If you are using QB 4.5 you need to modify the end of the BLTDH structure
+'  to remove the array declaration for fd[] and use either of the techniques
+'  covered there (BLTKH node sizes: 512,1024,1536,2048,2560 bytes&amp; max fields: 1000)
+'  [-------------------------------------------------------------- NOTE THAT]
+
+'CONST MAX.KEY.LENGTH = 196     ' Basic can't use a CONST in an array declaration
+'CONST B.MAX.FIELDS =32         ' so these values are hard-coded (MAX_FIELDS and NODE_SIZE
+'CONST B.NODE.SIZE  =512        ' can be changed to other valid values in the TYPEs below)
+
+' -------------------------------
+' DBF header info
+' first 32 bytes of DBF file
+
+TYPE BLTDBFINFO
+ fileID         AS STRING * 1   ' 000 file id byte (this is the first 32 bytes of a DBF file)
+ lastUpdateYR   AS STRING * 1   ' 001 binary
+ lastUpdateMO   AS STRING * 1   ' 002 binary
+ lastUpdateDA   AS STRING * 1   ' 003 binary
+ noRecords      AS LONG         ' 004 total number of records
+ headerLength   AS INTEGER      ' 008 length of data header
+ recordLength   AS INTEGER      ' 010 record length
+ nada           AS INTEGER      ' 012 reserved
+ xactionFlag    AS STRING * 1   ' 014 flag indicating incomplete dBase transaction
+ encryptFlag    AS STRING * 1   ' 015 flag indicating encrypted
+ filler         AS STRING * 16  ' 016 fill to 32 bytes
+END TYPE                        '  32 bytes
+
+
+TYPE BLTFD                      ' field descriptor
+ fieldName      AS STRING * 11  ' 000 ASCII/OEM, UPPER, underscore, zero-filled, (0T)
+ fieldType      AS STRING * 1   ' 011 UPPER characters: C,N,D,L,M (F,G,B) [Y,3,4,5,6,7,8]
+ fieldDA        AS LONG         ' 012 field start offset (delete tag=0, fld1=1, fld2=fld1+fld1's size..., non-std)
+ fieldLength    AS STRING * 1   ' 016 field length
+ fieldDC        AS STRING * 1   ' 017 decimal count (high byte of length if fieldType=C)
+ altFieldLength AS INTEGER      ' 018 (obsolete)
+ filler         AS STRING * 12  ' 020 not used
+END TYPE                        '  32 bytes
+
+
+TYPE BLTDH                      ' Data file structure
+ fType          AS LONG         ' 000  bit0=1 for DBF data file, XB
+ flags          AS LONG         ' 004  bit0=1 is dirty
+                                '      bit1=1 full lock (count stored in DHD.lockCount)
+                                '      bit2=1 full shared lock (if bit1=1)
+                                '      bit3=1 read-through lock (maxFileSize effectively cut in half)
+                                '      bit4=1 skip over deleted records in BltIx4Get*() routines
+                                '      bit5=1 header is locked (count stored in DHD.hdrLockCount)
+                                '      bit6=1 header shared locked (if bit5=1)
+                                '      bit7=1 handle is read-only
+                                '      bit8-31 reserved (=0)
+ handle         AS LONG         ' 008  file handle
+ asMode         AS LONG         ' 012  access-sharing mode of open
+ noFields       AS LONG         ' 016  number of fields in this data file
+ filenamePtr    AS LONG         ' 020  filename at open, PSZ
+ mutexHandle    AS LONG         ' 024  mutex handle
+                                '
+                                '      memo file header
+ memoAvailBlock AS LONG         ' 028  next available block (header is block 0)
+ memoUnk1       AS LONG         ' 032  not used
+ memoFilename   AS STRING * 8   ' 036  filename proper (first 8 of filename proper)
+ memoUnk2       AS LONG         ' 044  not used (apparently)
+ memoBlockSize  AS LONG         ' 048  block size, must be at least 24 to cover header! and less than 64K
+                                '
+                                '      memo file control
+ memoHandle     AS LONG         ' 052  handle of open memo file
+ memoFlags      AS LONG         ' 056  bit0=1 is dirty
+ memoLastNo     AS LONG         ' 060  last accessed memo number (if not 0)
+ memoLastLink   AS LONG         ' 064  link data for last accessed memo
+ memoLastSize   AS LONG         ' 068  size of last accessed memo (in bytes, w/OH)
+ memoHeaderSize AS LONG         ' 072  size of first block (dBASE same as all, FP just 24, or?, if 0 uses memoBlockSize)
+ memoExt        AS STRING * 4   ' 076  extension to use for memo file (def='DBT\0')
+ memoInUseFlag  AS LONG         ' 080  default flag value is 0x8FFFF (0x8FFFF used if memoInUseFlag=0)
+                                '
+ lockCount      AS LONG         ' 084  only when dec'ed to 0 do full unlock
+ hdrLockCount   AS LONG         ' 088  only when dec'ed to 0 do header unlock
+ maxFileSize    AS LONG         ' 092  see also DHD.flags, bit3
+ maxFileSizeH   AS LONG         ' 096  not used: placeholder when T_BLTFO is 32 bits
+ packPct        AS LONG         ' 100  percent of sort|pack done (0,1-99)
+ userWord       AS LONG         ' 104  user word (available for programmer's use)
+                                '
+                                '      data function pointers
+ xCallBackPtr   AS LONG         ' 108  xCallBackPtr is callback routine for pack (def=0:none)
+ xCryptoPtr     AS LONG         ' 112  xCryptoPtr is callback routine for crypto (def=0:none)
+ rsv116         AS LONG         ' 116  reserved
+ rsv120         AS LONG         ' 120  reserved
+ rsv124         AS LONG         ' 124  reserved
+                                '
+                                '      state data:
+ MPNL           AS LONG         ' 128  max pathname length (def=0, use bullet_MPNL)
+ MPCL           AS LONG         ' 132  max pathname component length (def=0, use bullet_MPCL)
+ MPXL           AS LONG         ' 136  max pathname extension length (def=0, use bullet_MPXL)
+ MASZ           AS LONG         ' 140  max single allocation request size, in bytes, that will be made (def=0, use bullet_MASZ)
+ MAM            AS LONG         ' 144  memory allocation strategy (0=default for platform)
+ LOMS           AS LONG         ' 148  flag to leave old memo space (1=leave old space as-is, 0=clear it)
+ rsv152         AS LONG         ' 152  reserved
+ rsv156         AS LONG         ' 156  reserved
+                                ' 160 plus:
+                                '      -------------------------------------------
+                                '      data file header (actually written to disk)
+ fileID         AS STRING * 1   ' 000  file id byte
+ lastUpdateYR   AS STRING * 1   ' 001  binary
+ lastUpdateMO   AS STRING * 1   ' 002  binary
+ lastUpdateDA   AS STRING * 1   ' 003  binary
+ noRecords      AS LONG         ' 004  total number of records
+ headerLength   AS INTEGER      ' 008  length of data header
+ recordLength   AS INTEGER      ' 010  record length (includes tag byte)
+ nada           AS INTEGER      ' 012  reserved
+ xactionFlag    AS STRING * 1   ' 014  flag indicating incomplete dBASE transaction (bit0=1 DBF, bit1=1 DBT)
+ encryptFlag    AS STRING * 1   ' 015  flag indicating encrypted (not modified by Bullet)
+ rsv16          AS STRING * 12  ' 016  reserved
+ rsv28          AS STRING * 1   ' 028  reserved
+ rsv29          AS STRING * 1   ' 029  reserved
+ rsv30          AS STRING * 2   ' 030  reserved
+                                'if BASIC7 then adjust fd[] as needed (set to max fields you will allow)
+                                'use multiple TYPEs if you need many different-sized fd[]s
+                                '-----------------------------------------------------------------------
+                                'NOTE: the next line must be REMed out for QB4.5  ======================
+ fd[0 to 31]    AS BLTFD        ' 032  for each field (BASIC structure arrays requires explicit size)
+                                'if QB 4.5 will be using a buffer area which is BltMemCpy() into and out of, as needed
+                                '-------------------------------------------------------------------------------------
+                                'NOTE: the next line must be unREMed for QB 4.5  =====================================
+' fd AS STRING * 1024           '032 1024/32=32 (max) fields fit in this buffer
+                                'an alternative is to multiple lines of fd## AS FD", one for each field
+                                'fd00  AS FD ' 032  QuickBASIC doesn't know about arrays in structures
+                                'fd01  AS FD ' 064  (BASIC7 does) so have to allocate each FD separately
+                                'fd02  AS FD ' 096
+                                'fd03  AS FD ' 128
+END TYPE                        ' workspace (160) + header proper (32) + descriptors (32 each) bytes
+
+
+'-------------------------------------------------------------------------------------------------
+
+
+' ---------------
+' IX4 header info
+
+TYPE BLTIX4INFO
+ fileID         AS LONG         ' 000  file id  (this is the first 44 bytes of an IX4 file)
+ nodeSize       AS LONG         ' 004  size of a node, in bytes (buffer[], at end of KH, must be this size)
+ rootNode       AS LONG         ' 008  root node (1-based)
+ noKeys         AS LONG         ' 012  total number of keys
+ availNode      AS LONG         ' 016  next available node (link to, 0 if none, 1-based)
+ freeNode       AS LONG         ' 020  next free node (always points to last physical node+1, at end of file)
+ keyLength      AS LONG         ' 024  length of key
+ maxKeys        AS LONG         ' 028  maximum number of keys on a node: (nodeSize-5)/(keyLen+8) (255=absolute max)
+ codePage       AS LONG         ' 032  code page from Ix4CreateFile
+ countryCode    AS LONG         ' 036  country code from Ix4CreateFile
+ sortCmpCode    AS LONG         ' 040  (see KH)
+END TYPE                        '  44 bytes
+
+
+TYPE BLTXLATEX                  ' (informational use only)
+ fType          AS STRING * 1   ' 000 field type (see below)
+ length         AS STRING * 1   ' 001 bytes to use starting at offset (never GT MAX_KEY_LENGTH)
+ offset         AS INTEGER      ' 002 byte offset into data record that length bytes are used
+ flags          AS INTEGER      ' 004 flags (bit0=1 upper, bit1=1 descend)
+END TYPE                        '   6 bytes (one xlatex per key component)
+                                ' fType:
+                                ' std fTypes: C,N,D,L,M
+                                ' extended: F,G,B  (F same as N, G/B same as M)
+                                ' Bullet 3: Y,3,4,5,6,7,8 (binary data fields, see also SORT_MIXED_S16...U64)
+
+' ---------
+' KeyHeader
+' Composed of: workspace(512)+header(1024)+node buffer(512,1024,1536,2048,2560)=2KB to 4KB KH size
+
+TYPE BLTKH                      '
+ fType          AS LONG         ' 000  bit0=0 for index file, btree
+ flags          AS LONG         ' 004  bit0=1 is dirty
+                                '      bit1=1 full lock (count stored in KH.lockCount)
+                                '      bit2=1 full shared lock (if bit1=1) (clred as below)
+                                '      bit3=1 read-through lock (maxFileSize effectively cut in half)
+                                '      bit4=1 atomic access
+                                '      bit5-6 reserved (=0)
+                                '      bit7=1 handle is read-only
+                                '      bit8-12 reserved (=0)
+                                '      bit13-15= reserved (=?)
+                                '      bit16-31 reserved (=0)
+ handle         AS LONG         ' 008  file handle
+ asMode         AS LONG         ' 012  access-sharing mode of open
+ xbLinkPtr      AS LONG         ' 016  related XB DHD header (aka dhdPtr)
+ filenamePtr    AS LONG         ' 020  filename at open, PSZ
+ mutexHandle    AS LONG         ' 024  mutex handle
+                                '      Btree workspace
+ sWork028       AS LONG         ' 028    "
+ sWork032       AS LONG         ' 032    "
+ sWork036       AS LONG         ' 036    "
+ sWork040       AS LONG         ' 040    "
+ sWork044       AS LONG         ' 044    "
+ sWork048       AS STRING * 120 ' 048    "
+ rsv168         AS LONG         ' 168  reserved
+ wsPtr          AS LONG         ' 172  additional workspace ptr (released automatically at header flush)
+ workHandle     AS LONG         ' 176  open handle of reindex work file, if not 0
+                                '      history info (since opened or last cleared)
+ searches       AS LONG         ' 180  keys searched for
+ seeks          AS LONG         ' 184  nodes seeked (sought)
+ hits           AS LONG         ' 188  node seeks satisfied without disk access
+ keysDeleted    AS LONG         ' 192  keys deleted
+ keysStored     AS LONG         ' 196  keys added
+ nodesSplit     AS LONG         ' 200  splits needed on insert
+ nodesMadeAvail AS LONG         ' 204  nodes made available from deleting keys
+ tagMarks       AS LONG         ' 208  used to demark delete tag to exclude/include
+ lockCount      AS LONG         ' 212  active full-lock count
+ rsv216         AS LONG         ' 216  reserved
+ maxFileSize    AS LONG         ' 220  see also KH.flags, bit3
+ maxFileSizeH   AS LONG         ' 224  not used: placeholder when T_BLTFO is 32 bits
+ reindexPct     AS LONG         ' 228  percent of reindex done (0,1-99)
+ userWord       AS LONG         ' 232  user word (available for programmer's use)
+                                '      ix4 function pointers
+ xCallBackPtr   AS LONG         ' 236  xCallBackPtr is callback routine for reindex (def=0:none)
+ xCryptoPtr     AS LONG         ' 240  xCryptoPtr is crypto routine (def=0:none)
+ xSortPtr       AS LONG         ' 244  xSortPtr is sort routine (def=0:BltFuncIx4Sort())
+ xSortCmpPtr    AS LONG         ' 248  xSortCmpPtr is sort-compare routine (def=0:BltFuncIx4SortCmp())
+ xUserSortCmpPtr AS LONG        ' 252  xUserSortPtr is handler for sort-cmp codes 20 or above (def=none)
+ xBuildKeyPtr   AS LONG         ' 256  xBuildKeyPtr is build-key routine (def=0:BltFuncIx4BuildKey())
+ xParseExpPtr   AS LONG         ' 260  xParseExpPtr is expression parser (def=0:BltFuncIx4ParseExp())
+ xBtreePtr      AS LONG         ' 264  xBtreePtr is btree manager (def=0:BltFuncIx4BTM())
+ xReindexPtr    AS LONG         ' 268  xReindexPtr is reindex routine (def=0:BltFuncIx4Reindex())
+                                '      state data:
+ MPNL           AS LONG         ' 272  max pathname length (def=0, use bullet_MPNL)
+ MPCL           AS LONG         ' 276  max pathname component length (def=0, use bullet_MPCL)
+ MPXL           AS LONG         ' 280  max pathname extension length (def=0, use bullet_MPXL)
+ MARSV          AS LONG         ' 284  bytes to hold back from Bullet reindex routine (def=0, use bullet_MARSV)
+ MASZRX         AS LONG         ' 288  max total memory, in bytes, reindex is allowed to allocate (def=0, use bullet_MASZRX)
+ MASZ           AS LONG         ' 292  max single allocation request size, in bytes, that will be made (def=0, use bullet_MASZ)
+ MAM            AS LONG         ' 296  memory allocation strategy (0=default for platform)
+ MMUBR          AS LONG         ' 300  max memory allocation used by reindex, in bytes (R-O)
+ rsv304         AS LONG         ' 304  reserved
+                                '
+ currKeyRecNo   AS LONG         ' 308  current rec number assigned to KH.currKey (01 00 00 00 = 1)
+ currKey        AS STRING * 196 ' 312  current key value (MAX_KEY_LENGTH=196 bytes)
+ zeroT          AS STRING * 1   ' 508  allow 196-byte key to be 0T'ed
+ rsv509         AS STRING * 1   ' 509  internal use
+ rsv510         AS STRING * 2   ' 510  reserved
+                                ' 512  plus:
+                                '      index file header
+ fileID         AS LONG         ' 000  file id
+ nodeSize       AS LONG         ' 004  size of a node, in bytes (buffer[], at end of KH, must be this size)
+ rootNode       AS LONG         ' 008  root node (1-based)
+ noKeys         AS LONG         ' 012  total number of keys
+ availNode      AS LONG         ' 016  next available node (link to, 0 if none, 1-based)
+ freeNode       AS LONG         ' 020  next free node (always points to last physical node+1, at end of file)
+ keyLength      AS LONG         ' 024  length of key
+ maxKeys        AS LONG         ' 028  maximum number of keys on a node: (nodeSize-5)/(keyLen+8) (255=absolute max)
+ codePage       AS LONG         ' 032  code page from CreateIndexFile
+ countryCode    AS LONG         ' 036  country code from CreateIndexFile
+ sortCmpCode    AS LONG         ' 040  system (1-9, 10-31 reserved) or user (32 to 255) |highbyte has special use
+                                '      high word has flags: bit0=1 dups allowed         | which comes into play when
+                                '                           bit1=0 OEM charset          | no data file used
+                                '                           bit1=1 ANSI charset
+                                '                           bit2-15 rez
+                                '
+                                '      translated key expression as done by ParseKey during BltIx4CreateFile()
+                                '      for each key part in KH.expression a 6-byte structure is used:
+                                '
+                                '       UCHAR  ftype   field type (C,N,L, etc)
+                                '       UCHAR  length  bytes to use starting at offset (never GT MAX_KEY_LENGTH)
+                                '       USHORT offset  byte offset into data record that length bytes are to be used
+                                '       USHORT flags   flags (iff bit15=0 then bit0=1 upper, bit1=1 descend)
+                                '
+ xlateCount     AS LONG         ' 044  number of key fields (16 max fields)
+ xlateExp       AS STRING * 96  ' 048  key construct info (96 bytes, MAX_KEY_FIELDS*6)
+ rsv144         AS LONG         ' 144  reserved
+ rsv148         AS LONG         ' 148  reserved
+ xactionFlag    AS STRING * 1   ' 152  flag indicating index file was not flushed (bit0=1 not flushed)
+ rsv153         AS STRING * 7   ' 153  reserved
+ rsv160         AS STRING * 224 ' 160  reserved
+                                '      (IX4_HDR_SIZE_FLUSH to here)
+ expression     AS STRING * 380 ' 384  key expression, user (ASCIZ) (same as IX4_MAX_EXP_SIZE)
+ STsize         AS LONG         ' 764  size of sort table following (is 0x100 or 0)
+ sortTable      AS STRING * 256 ' 768  sort table, fill at index create
+                                '      disk header ends here, at 1024 bytes (first node is at +1024)
+                                '
+ buffer         AS STRING * 512 '1024  node buffer determined at index file create (nodeSize)
+END TYPE                        ' 512+1024+512 = 2048 bytes (for 512-byte node size)
+
+
+' ---------------
+' misc structures
+
+TYPE BLTIUEX
+ khPtr          AS LONG         ' I:KH of index file
+ keyBufferPtr   AS LONG         ' O:key buffer (separate buffer for each operation)
+ recordPtr      AS LONG         ' I:record data to add | update with
+ recNo          AS LONG         ' O:recNo that record data was stored on insert | I:recNo to update
+ action         AS LONG         ' O:action performed
+ flags          AS LONG         ' I:operation flags
+ rsvPtr         AS LONG         ' set to 0 (used internally)
+ nextPtr        AS LONG         ' I:next TBLT_IUEX, or 0 if no more
+END TYPE                        ' 32 bytes
+
+TYPE BLTLOCKEX
+ khdhPtr        AS LONG         ' I:KH or DH of file
+ mode           AS LONG         ' I:LOCK_MODE_*
+ recNoStart     AS LONG         ' I:for DH locks
+ recCount       AS LONG         ' I:for DH locks
+ action         AS LONG         ' O:action performed
+ flags          AS LONG         ' I:operation flags
+ rsvPtr         AS LONG         ' set to 0 (used internally)
+ nextPtr        AS LONG         ' I:next TBLT_IUEX, or 0 if no more
+END TYPE                        ' 32 bytes
+
+CONST OFFSET.KH.BUFFER = 1536
+CONST OFFSET.DH.FD1    =  192
+
+' end b3msbtyp.bi
+</pre>
+<br>
+<br>
+<br>
+<br>
+<center><font size=-1>All content Copyright &copy; 1999 Cornel Huth.  All rights reserved.</font></center>
+</body>
+</html>

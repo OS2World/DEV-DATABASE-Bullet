@@ -1,0 +1,86 @@
+<html>
+<head>
+<title>BltIx4Insert</title>
+</head>
+<body>
+<h4>BltIx4Insert</h4>
+<br>
+<a href="r_birix.htm">&lt;&nbsp;Prev</a>&nbsp;&nbsp;<a href="_toc.htm">TOC</a>&nbsp;&nbsp;<a href="r_biiex.htm">Next&nbsp;&gt;</a>
+<p>
+<pre>
+TBLT_RETC TBLT_ENTRY BltIx4Insert(TBLT_KH *khPtr,
+                                  VOID *keyBufferPtr,
+                                  ULONG *recNoPtr,
+                                  VOID *recordPtr,
+                                  ULONG *actionPtr);
+
+
+ khPtr          I:index file control structure
+ keyBufferPtr   O:key stored
+ recNoPtr       O:recNo of record data added
+ recordPtr      I:record data to add
+ actionPtr      O:action taken
+
+</pre>
+This routine adds the data record, builds a key for it, and stores that key
+and recNo into the index file.
+<p>
+A single index file and a single data file are accessed.  To perform more
+complex inserts see <code>BltIx4InsertEx()</code>.
+<p>
+On a successful insert, the index is re-positioned to this key automatically.
+<p>
+If the key store operation failed, for whatever reason, the data record add
+operation that preceded it will be backed out automatically, thereby
+restoring the database to its original state.
+<p>
+ActionPtr is set to one of the following values:
+<pre>
+  0 = nothing done (error encountered)
+  3 = added record and stored key (normal)
+ 16 = key build or key store failed, but could not remove record added
+</pre>
+<p>
+<br>
+If <code>KH.tagMarks</code> is not zero Bullet performs exclusion testing based on the following:
+<p>
+If the low-byte of the low word of KH.tagMarks is non-zero and matches the delete tag of the
+record (the first byte of the data record), then the insert fails with a
+<code>WRN_RECORD_EXCLUDE</code> return code.  This is mainly used for reindexing (records whose
+keys are excluded do not get their keys put in the index file), but is also used by
+<code>BltIx4Insert(), BltIx4InsertEx()</code> and <code>BltIx4Update(), BltIx4UpdateEx()</code>,
+where such a match is considered an error.
+<p>
+If the high-byte of the low word of KH.tagMarks is non-zero and does <em>not </em> match the
+delete tag of the record, then the insert fails with a <code>WRN_RECORD_EXCLUDE</code> return
+code.  In other words, for an insert to succeed, the first byte of the record must match this
+byte.  This is also used by the routines listed above, and by the reindex routine.
+<p>
+The high word of KH.tagMarks is reserved and should be set to 0.
+<p>
+Here is the program logic used by Bullet, in its build key routine, to determine if this
+code should be returned (trecordPtr points to the delete tag of the data record):
+<pre>
+  // check tag byte for marker matches
+  // if (tagMarks & 255) then match means to return exclude warning
+  // if (tagMarks >> 8) & 255 then NO match means to return exclude warning
+  // this allows both an exclude and an include tag to be used at the same time
+
+  if (khPtr->tagMarks != 0) {
+     UCHAR tLo = khPtr->tagMarks & 255;
+     UCHAR tHi = (khPtr->tagMarks >> 8) & 255;
+     if (tLo != 0 && tLo == *trecordPtr) rc = WRN_RECORD_EXCLUDE;
+     if (tHi != 0 && tHi != *trecordPtr) rc = WRN_RECORD_EXCLUDE;
+  }
+
+</pre>
+<p>
+<em>Return:</em>&nbsp;Non-zero indicates an error, otherwise the data record
+is added and its key stored.
+<br>
+<br>
+<br>
+<p>
+<center><font size=-1>All content Copyright &copy; 1999 Cornel Huth.  All rights reserved.</font></center>
+</body>
+</html>

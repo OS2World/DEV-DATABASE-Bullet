@@ -1,0 +1,103 @@
+<html>
+<head>
+<title>BltIx4InsertEx</title>
+</head>
+<body>
+<h4>BltIx4InsertEx</h4>
+<br>
+<a href="r_bii.htm">&lt;&nbsp;Prev</a>&nbsp;&nbsp;<a href="_toc.htm">TOC</a>&nbsp;&nbsp;<a href="r_biu.htm">Next&nbsp;&gt;</a>
+<p>
+<pre>
+TBLT_RETC TBLT_ENTRY BltIx4InsertEx(TBLT_IUEX *iuexPtr,
+                                    ULONG *slotPtr);
+
+
+ iuexPtr        I:insert/update control structure
+ slotPtr        O:slot that failed
+
+</pre>
+This routine operates on a list of insert operations as a single transaction.  If any
+of the operations fail, all previous operations are backed out.
+<p>
+The following TBLT_IUEX structure must be filled, one for each operation in the list
+to perform:
+<p>
+<pre>
+ typedef struct _BLTIUEX {
+  TBLT_KH *khPtr;       // I:KH of index file
+  VOID *keyBufferPtr;   // O:key buffer (separate buffer for each operation)
+  VOID *recordPtr;      // I:record data to add
+  ULONG recNo;          // O:recNo that record data was stored
+  ULONG action;         // O:action performed (see below) (I:set to 0)
+  ULONG flags;          // I:operation flags (see below)
+  VOID *rsvPtr;         // set to 0 (used internally)
+  VOID *nextPtr;        // I:next TBLT_IUEX, or 0 if no more
+ } TBLT_IUEX;
+
+</pre>
+<code>khPtr</code> is the pointer the TBLT_KH structure for this list item.
+<p>
+<code>keyBufferPtr</code> must be at least as large as the key length for the
+handle.  This cannot be shared with other items in the list (<em>ie</em>, key
+buffers cannot be shared with other TBLT_IUEX items in the list).
+<p>
+<code>recordPtr</code> is the data to insert.  It must always be a valid pointer
+to an entire data record.  This data is written to the khPtr->xbLinkPtr->handle
+(<em>ie</code>, the data file for this index).
+<p>
+<code>recNo</code> is the record number of the data record stored.
+<p>
+<code>action</code> is set to one of the following values for each operation performed:
+<pre>
+  0 = nothing done (error encountered)
+  2 = inserted key into index
+  3 = added record and inserted key into index
+ 16 = key build or key store failed but could not remove data record added
+      (should mark record as deleted at next opportunity and perform a pack)
+ 17 = key build or key store failed but could not remove key added
+ 33 = both 17 and 16
+</pre>
+<p>
+<code>flags</code> modifies the operation performed on this item:
+<pre>
+ FLAGSEX_IU_SKIPDATA: the data at recordPtr is not added to the data file
+</pre>
+For FLAGSEX_IU_SKIPDATA to be used, the following must be true:
+<ol>
+<li>The data at *recordPtr has already been written in this operation
+<li>The data at *recordPtr was the last data write operation
+<li>recNo must be 0
+</ol>
+An exception is allowed:  if no data write is wanted at all in this list for this
+record data, set .recNo to the record number of a record already in the DBF.  The
+recordPtr must still point to the contents of this record (and recNo must be a valid
+record number).  All inserts for this and following list items will use that
+recNo.  The recNo may be changed for items later in the list, at which point that new
+recNo is used for inserts. This allows indexing of already-existing data records in
+a transaction.
+<p>
+<code>rsvPtr</code> is used internally, and should be initialized to 0.
+<p>
+<code>nextPtr</code> is used to link to the next operation in the list.  Each
+operation uses a separate TBLT_IUEX structure.  When linked together via this
+nextPtr, the list becomes the transaction list:  each operation (each IUEX) is
+executed in order; if all operations succeed, the transaction is successful.
+Set .nextPtr to 0 in the last list operation.
+<p>
+On a successful transaction, the index for each handle is re-positioned to the
+last key inserted.
+<p>
+You need to manually handle memo data in transactions.  For help on this contact
+Bullet support (see the Technical support page in this manual).
+<p>
+If any insert operation failed, for whatever reason, all previous operations in the
+list are backed out automatically, thereby restoring the database to its original state.
+<code>*slotPtr</code> has the the list item that failed (the first list item is 1).
+<p>
+<em>Return:</em>&nbsp;Non-zero indicates an error, with *slotPtr set to the
+list item that failed (slot 1 is the first item in the list); otherwise all
+operations in the list completed successfully.
+<p>
+<center><font size=-1>All content Copyright &copy; 1999 Cornel Huth.  All rights reserved.</font></center>
+</body>
+</html>

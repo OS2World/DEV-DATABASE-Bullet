@@ -1,0 +1,112 @@
+<html>
+<head>
+<title>Replacing index support routines</title>
+</head>
+<body>
+<h4>Replacing index support routines</h4>
+<br>
+<a href="x_apack.htm">&lt;&nbsp;Prev</a>&nbsp;&nbsp;<a href="_toc.htm">TOC</a>&nbsp;&nbsp;<a href="x_srcpak.htm">Next&nbsp;&gt;</a>
+<p>
+Bullet lets you replace many of the key-handling support functions with functions of your own.  The
+routines that can be replaced are:
+<p>
+<ol>
+<li>Sort
+<li>UserSortCmp
+<li>BuildKey
+<li>ParseExp
+</ol>
+<p>
+Of these, UserSortCmp is probably the only one that you'll want to use.  This vector has no
+default routine since it's only used for new sort-compare routines that you require and for
+which Bullet itself doesn't know about.  One such example is packed BCD, but any type you can
+think of can be used.
+<p>
+The data pack/sort, reindex, and crytpo callbacks are not discussed here.  See the example
+source code for how to use those routines (those routines don't actually replace anything).  Also
+not discussed here are the sortCmp vector (use UserSortCmp instead), and the proprietary B-tree
+and reindex code vectors.
+<p>
+<br>
+Each of the function pointers is prototyped.  The prototypes and a description of each follows.
+With this you should be able to construct your own key-support replacement routines.
+<pre>
+  1. typedef TBLT_RETC (TBLT_CALLBACK *TBLT_IX4SORTPTR)(VOID *khPtr, VOID *bufferPtr, ULONG count);
+  2. typedef TBLT_CMPC (TBLT_CALLBACK *TBLT_IX4USERSORTCMPPTR)(VOID *khPtr, VOID *arg1ptr, VOID *arg2ptr, VOID *hvBufferPtr, ULONG hasRecNo);
+  3. typedef TBLT_RETC (TBLT_CALLBACK *TBLT_IX4BUILDKEYPTR)(VOID *khPtr, VOID *recordPtr, VOID *keyPtr);
+  4. typedef TBLT_RETC (TBLT_CALLBACK *TBLT_IX4PARSEEXPPTR)(VOID *khPtr, ULONG *keyLenPtr);
+
+</pre>
+In the following, the return code for success is 0, and on error an appropriate code (such
+as the code returned by the operating system (GetLastError(), if needed)).  How you write the
+internal guts is up to you, but it's recommended that you purchase the optional source pack so
+you can have a working example to follow.
+<p>
+You can cast calling parameters within your code to different types, if you are consistent,
+and are aware of the semantics of each parameter.
+<p>
+<br>
+1. Sort a buffer of <em>count </em> elements, where each element is a key (of KH.keyLength bytes)
+followed by its record number (therefore, each element is key length + 4 bytes in size):
+<pre>
+TBLT_RETC TBLT_CALLBACK BltFuncIx4Sort(TBLT_KH *khPtr, VOID *bufferPtr, ULONG count) {
+ TBLT_RETC rc = 0;
+ ;
+ return rc;
+}
+
+</pre>
+2. Compare two items for sortCmp codes 1 to 31.  By default this is reserved for Bullet,
+and you should instead be using the UserSortCmp vector.  In any case, this works just like
+that routine, except this routine only handles codes from 1 to 31, including the special
+case where HIGHVALUES is returned for those codes.
+<p>
+3. Compare two items for sortCmp codes 31 to 255 (these codes are not intrinsic Bullet codes, so
+when Bullet sees a KH.sortCmpCode within this range, it always vectors through here).  Note that
+this routine returns a compare value (LT 0, EQ 0, or GT 0), and not a specific return code type.
+<pre>
+TBLT_CMPC TBLT_CALLBACK BltFuncIx4SortCmp(TBLT_KH FAR *khPtr, VOID FAR *arg1ptr, VOID FAR *arg2ptr, UCHAR FAR *hvBufferPtr, ULONG hasRecNo) {
+ TBLT_CMPC diff = 0;
+ if (arg1ptr != 0 && arg2ptr != 0) {
+  ; // compare the values at the pointers
+  ; // returning 0 if arg1=arg2, -1 if arg1 LT arg2, +1 if arg1 GT arg2
+  ; // if hasRecNo flag is non-zero then, if compare proper is EQ, continue compare based on record number
+ }
+ else {
+  ; // copy HIGHVALUES for this KH.sortCmpCode for KH.keyLength bytes into hvBuffer
+  ; // if hasRecNo flag is non-zero, append high record number (0xFFFFFFFF) to HIGHVALUES in buffer
+  ; // this special-case call uses the diff value as the return code (which is 0 if okay, or an
+  ; // appropriate error code, such as EXB_BAD_SORT_CMP_CODE)
+ }
+ return diff;
+}
+
+</pre>
+4. Build a key.
+<pre>
+TBLT_RETC TBLT_CALLBACK BltFuncIx4BuildKey(TBLT_KH FAR *khPtr, VOID FAR *recordPtr, VOID FAR *keyPtr) {
+ TBLT_RETC rc = 0;
+  ; // this routine builds a key from the data in the record buffer based on information
+  ; // in the KH structure, and stores that key into the key buffer.  Crypto may be required.
+  ; // For detail, consult the xbldkey.c source file in the optional source pack.
+ return rc;
+}
+
+</pre>
+5. Parse the key expression.
+<pre>
+TBLT_RETC TBLT_CALLBACK BltFuncIx4ParseExp(TBLT_KH FAR *khPtr, ULONG FAR *keyLenPtr) {
+ TBLT_RETC rc=0;
+  ; // this routine parses the text key expression and creates from that a TBLT_XLATE data structure
+  ; // For detail, consult the xparsex.c source file in the optional source pack.
+ return rc;
+}
+
+</pre>
+<br>
+<br>
+<br>
+<p>
+<center><font size=-1>All content Copyright &copy; 1999 Cornel Huth.  All rights reserved.</font></center>
+</body>
+</html>

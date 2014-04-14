@@ -1,0 +1,41 @@
+<html>
+<head>
+<title>BltIx4EqualKey</title>
+</head>
+<body>
+<h4>BltIx4EqualKey</h4>
+<br>
+<a href="r_bisk.htm">&lt;&nbsp;Prev</a>&nbsp;&nbsp;<a href="_toc.htm">TOC</a>&nbsp;&nbsp;<a href="r_biegk.htm">Next&nbsp;&gt;</a>
+<p>
+<pre>
+TBLT_RETC TBLT_ENTRY BltIx4EqualKey(TBLT_KH *khPtr,
+                                    VOID *keyBufferPtr,
+                                    ULONG *recNoPtr);
+
+
+ khPtr          I:index file control structure
+ keyBufferPtr   I:key to find (exactly this key)
+ recNoPtr       IO:recNo to match (or 0)/recNo of key found
+
+</pre>
+This routine finds the exact match for the key in keyBufferPtr and the recNo in recNoPtr.
+If recNo is passed as zero, the first key matched is returned (that is, the key with the
+lowest recNo).
+<p>
+This routine only finds exact key matches, so its use is probably limited to checking if a
+given key/recNo (or a key with any recNo) already exists, or for positioning the index
+file.
+<p>
+Note: The key to find must match exactly with a key in the index file, for all
+keyLength bytes.  The compare does not stop at a \0, even if the key is a
+character type.
+<p>
+<em>Return:</em>&nbsp;Non-zero indicates an error, otherwise the key is unchanged and
+the recNo is returned (if recNo was 0 on entry, otherwise recNo is unchanged).
+<br>
+<br>
+<br>
+<p>
+<center><font size=-1>All content Copyright &copy; 1999 Cornel Huth.  All rights reserved.</font></center>
+</body>
+</html>

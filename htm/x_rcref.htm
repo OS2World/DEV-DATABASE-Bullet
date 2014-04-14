@@ -1,0 +1,501 @@
+<html>
+<head>
+<title>Return codes</title>
+</head>
+<body>
+<h4>Return codes</h4>
+<br>
+<a href="supdoc.htm">&lt;&nbsp;Prev</a>&nbsp;&nbsp;<a href="_toc.htm">TOC</a>&nbsp;&nbsp;<a href="x_mcref.htm">Next&nbsp;&gt;</a>
+<p>
+<table border=1 cellspacing=0 cellpadding=4>
+<caption><b>Operating system return codes (1 to 7999)</b></caption>
+<tr>
+<th>rc
+<th>Codename
+<th>Explanation
+<tr>
+<td align=right><code>1</code>
+<td align=left><code>EXB_FUNCTION_NOT_IMPLEMENTED</code>
+<td align=left>Function is not implemented: This routine is not implemented in this version,
+either due to an operating system limitation, or if a demo then because the feature is not
+implemented.
+<tr>
+<td align=right><code>8</code>
+<td align=left><code>EXB_NOT_ENOUGH_MEMORY</code>
+<td align=left>Cannot get memory requested: A request for memory was made by Bullet
+but the request failed.
+<tr>
+<td align=right><code>12</code>
+<td align=left><code>EXB_INVALID_ACCESS</code>
+<td align=left>Invalid file access flags: The access mode for the file open specifies
+an invalid combination.
+<tr>
+<td align=right><code>13</code>
+<td align=left><code>EXB_INVALID_PARAMETER</code>
+<td align=left>Invalid parameter: An argument passed to a function is not a valid
+value.  (The max DOS/Win16 file handles is 255.)
+<tr>
+<td align=right><code>15</code>
+<td align=left><code>EXB_INVALID_DRIVE</code>
+<td align=left>Not a valid drive letter: The drive letter is not valid.
+<tr>
+<td align=right><code>38</code>
+<td align=left><code>EXB_UNEXPECTED_EOF</code>
+<td align=left>Unexpected EOF (bytes read != bytes asked): On a read operation, the number
+of bytes specfied to be read were not all read.  Not necessarily an error.
+<tr>
+<td align=right><code>39</code>
+<td align=left><code>EXB_DISK_FULL</code>
+<td align=left>Disk full on WriteFile: On a write operation, the number of bytes specified
+to be written could not be written.  No bytes are written.
+<tr>
+<td align=right><code>80</code>
+<td align=left><code>EXB_FILE_EXISTS</code>
+<td align=left>Cannot create file since it already exists:  Bullet will not overwrite
+when creating a file.  Delete the existing file, if necessary.
+<tr>
+<td align=right><code>174</code>
+<td align=left><code>EXB_ATOMIC_LOCK_NOT_SUPPORTED</code>
+<td align=left>Only OS/2 32-bit supports atomic locks: Atomic relocking is supported only by OS/2.
+<tr>
+<td align=right><code>175</code>
+<td align=left><code>EXB_READ_LOCKS_NOT_SUPPORTED</code>
+<td align=left>OS/2 and WinNT support read (shared, non-exclusive) locks: Shared locking is
+supported only by OS/2 and WinNT.
+<tr>
+<td align=right><code>###</code>
+<td align=left><code> rc &lt;= 7999</code>
+<td align=left>Other operating system return codes, as generated/returned by the OS itself.
+</table>
+<p>
+<table border=1 cellspacing=0 cellpadding=4>
+<caption><b>General return codes (8200 to 8399)</b></caption>
+<tr>
+<th>rc
+<th>Codename
+<th>Explanation
+<tr>
+<td align=right><code>8295</code>
+<td align=left><code>WRN_USING_ST850</code>
+<td align=left>Code page info could not be loaded, using default cp=850 (DOS, create ix4): In
+DOS/Win16 a code page request failed so Bullet is using code page 850 (ASCII) by default.
+<tr>
+<td align=right><code>8296</code>
+<td align=left><code>WRN_USING_ST1252</code>
+<td align=left>Cp info could not be loaded, using default cp=1252 (DOS, create ix4): In
+DOS/Win16 a code page request failed so Bullet is using code page 1252 (Win-Ansi) by default.
+<tr>
+<td align=right><code>8305</code>
+<td align=left><code>EXB_SYSTEM_HANDLE</code>
+<td align=left>Bullet won't use or close handles 0-2: File handles less than 3 are not
+used by Bullet.  Does not apply to Win32 where handles are pointers.
+<tr>
+<td align=right><code>8306</code>
+<td align=left><code>EXB_FILE_NOT_OPEN</code>
+<td align=left>File not open (not Bullet handle, including xbLink): The structure.handle
+member is 0 and so cannot be operated on.
+<tr>
+<td align=right><code>8307</code>
+<td align=left><code>EXB_FILE_IS_DIRTY</code>
+<td align=left>Tried to reload/zap header but current still dirty: The file handle has
+unwritten header/node information in memory yet a request was made to reload the
+header/node from disk.  Flush the handle first.
+<tr>
+<td align=right><code>8308</code>
+<td align=left><code>EXB_BAD_FILETYPE</code>
+<td align=left>tried key op on non-key file, data op on non-data file:  Index operations
+need a KH structure khPtr; data operations need a DH structure dhPtr.
+<tr>
+<td align=right><code>8313</code>
+<td align=left><code>EXB_BUZZ</code>
+<td align=left>Evaluation version timed-out:  The demo version is for evaluation purposes
+only and is time-limited to about 30 days of average use.
+<tr>
+<td align=right><code>8314</code>
+<td align=left><code>EXB_BAD_INDEX</code>
+<td align=left>BltGetVar/SetVar index is not valid: The index for the Bullet state variable
+to get/set is not valid.
+<tr>
+<td align=right><code>8316</code>
+<td align=left><code>EXB_FILE_BOUNDS</code>
+<td align=left>File size GT max file size (or GT half that if read-through locks):  The
+file position would exceed the maximum file size allowed by the operating system so the
+operation is not performed.
+<tr>
+<td align=right><code>8317</code>
+<td align=left><code>EXB_READONLY</code>
+<td align=left>Handle has read-only flag active and attempted to write to it: The file
+handle was specified with the read-only flag and an attempt was made to write to it.
+<tr>
+<td align=right><code>8318</code>
+<td align=left><code>WRN_INCOMPLETE_XACTION</code>
+<td align=left>Header xactionFlag indicates an incomplete transaction (IX4|DBF|DBT):  The
+file was previously written to but was not flushed/closed properly.  The file may be
+corrupt.  For data files, use Validate.exe.  For index files, use BltFuncIx4Reindex.
+<tr>
+<td align=right><code>8319</code>
+<td align=left><code>EXB_FILE_ALREADY_OPEN</code>
+<td align=left>.handle is non-zero so already has an open file handle.  The structure.handle
+is not zero so either the structure is corrupt, was not initialized, or is already in use.
+<tr>
+<td align=right><code>8351</code>
+<td align=left><code>EXB_BAD_ALLOC_SIZE</code>
+<td align=left>Requested allocation size is more than bullet_MASZ, or is 0: A request for
+memory greater than that allow by bullet_MASZ was made, or a request of 0 bytes was made.
+<tr>
+<td align=right><code>8352</code>
+<td align=left><code>EXB_IO_WRAP_DETECTED</code>
+<td align=left>File I/O for bytes to/from memory address would cause segment wrap: The memory
+buffer provided plus the amount of bytes to I/O would exceed the end of the segment (DOS/Win16).
+<tr>
+<td align=right><code>8395</code>
+<td align=left><code>EXB_NULLFNPTR</code>
+<td align=left>Null function pointer detected (without default function available):  ll_testCallBack()
+(16-bit builds) has KH.xCallBackPtr = 0.
+<tr>
+<td align=right><code>8396</code>
+<td align=left><code>EXB_NULLPTR</code>
+<td align=left>General null pointer detected: A pointer was 0 when 0 is not a valid value
+for that pointer.
+<tr>
+<td align=right><code>8398</code>
+<td align=left><code>EXB_INVALID_DLL</code>
+<td align=left>DLL/LIB is not valid: The library has been altered from its original state.
+</table>
+<p>
+<table border=1 cellspacing=0 cellpadding=4>
+<caption><b>Multi-access return codes (8400 to 8499)</b></caption>
+<tr>
+<th>rc
+<th>Codename
+<th>Explanation
+<tr>
+<td align=right><code>8401</code>
+<td align=left><code>EXB_BAD_LOCK_MODE</code>
+<td align=left>Lock mode not valid: DOS/Win16 cannot use shared or atomic locks;
+lock mode may only be exclusive.  See also, <code>EXB_ATOMIC_LOCK_NOT_SUPPORTED</code>.
+<tr>
+<td align=right><code>8404</code>
+<td align=left><code>EXB_NOTHING_TO_UNLOCK</code>
+<td align=left>No outstanding full locks: An unlock call was made without any locks active.
+<tr>
+<td align=right><code>8405</code>
+<td align=left><code>EXB_ALREADY_FULL_LOCK</code>
+<td align=left>Already have a full lock so cannot record lock/header lock: Already have
+a full lock so cannot use BltLockDataHeader(), and cannot lock individual records.
+<tr>
+<td align=right><code>8406</code>
+<td align=left><code>EXB_ALREADY_HDR_LOCK</code>
+<td align=left>Already have a hdr lock so cannot full lock: Already have the data header
+locked so cannot full lock the data file.
+<tr>
+<td align=right><code>8407</code>
+<td align=left><code>EXB_DIFFERENT_LOCK_MODE</code>
+<td align=left>Current lock does not match new lock mode (shared/exclusive): A structure.handle
+can be locked more than once, but each lock request must be the same type: shared or exclusive
+(unless atomic relocking is specified).
+<tr>
+<td align=right><code>8408</code>
+<td align=left><code>EXB_SAME_LOCK_MODE</code>
+<td align=left>Current lock same as new lock mode (relock): If an atomic relock was requested
+then the new lock mode must be the opposite of the current lock mode.  For example, if the
+current mode is LOCK_MODE_EXCLUSIVE, the new mode must be LOCK_MODE_SHARED.
+</table>
+<p>
+<table border=1 cellspacing=0 cellpadding=4>
+<caption><b>Index return codes (8500 to 8599)</b></caption>
+<tr>
+<th>rc
+<th>Codename
+<th>Explanation
+<tr>
+<td align=right><code>8501</code>
+<td align=left><code>EXB_KEY_NOT_FOUND</code>
+<td align=left>Exact match of key not found (also, recNo not same, if specified): A call to get
+the exact key failed because that key was not in the index file.  If duplicate keys are allowed,
+and the search specified a record number also, and the key/recNo pair are not in the index file
+this code is returned as well.
+<tr>
+<td align=right><code>8502</code>
+<td align=left><code>EXB_KEY_EXISTS</code>
+<td align=left>Key exists already and dups not allowed (or key+recno exists w/dups): A key
+already exists with the same value.  If duplicate keys are allowed, and the key and its
+32-bit data (typically the record number) already exist, then that too returns this code.
+<tr>
+<td align=right><code>8503</code>
+<td align=left><code>EXB_END_OF_FILE</code>
+<td align=left>Already at last index order: A next-key operation was requested with the index
+already positioned at the end.
+<tr>
+<td align=right><code>8504</code>
+<td align=left><code>EXB_TOP_OF_FILE</code>
+<td align=left>Already at first index order: A previous-key operation was requested with the
+index already positioned at the beginning (top).
+<tr>
+<td align=right><code>8505</code>
+<td align=left><code>EXB_EMPTY_FILE</code>
+<td align=left>Nothing to do since no keys: There are no keys in the index file so searching
+cannot be performed.
+<tr>
+<td align=right><code>8507</code>
+<td align=left><code>EXB_BAD_INDEX_STACK</code>
+<td align=left>Index file is corrupt (stack over/underflow): The internal index structure
+is corrupt (internal error).
+<tr>
+<td align=right><code>8508</code>
+<td align=left><code>EXB_BAD_INDEX_READ0</code>
+<td align=left>Index file is corrupt (read attempt of node 0): The internal index structure
+is corrupt (internal error).
+<tr>
+<td align=right><code>8509</code>
+<td align=left><code>EXB_BAD_INDEX_WRITE0</code>
+<td align=left>Index file is corrupt (write attempt to node 0): The internal index structure
+is corrupt (internal error).
+<tr>
+<td align=right><code>8510</code>
+<td align=left><code>EXB_SEEK_PREV_FAILED</code>
+<td align=left>Seek prev failed: The internal index structure is corrupt (internal error).
+<tr>
+<td align=right><code>8511</code>
+<td align=left><code>EXB_BAD_INDEX_ROOTNODE</code>
+<td align=left>Index file is corrupt (root node cannot = 0): The internal index structure
+is corrupt (internal error).
+<tr>
+<td align=right><code>8512</code>
+<td align=left><code>EXB_BAD_INDEX_KEYCOUNT</code>
+<td align=left>Index file is corrupt (key count GT max keys on node): The internal index structure
+is corrupt (internal error).
+<tr>
+<td align=right><code>8513</code>
+<td align=left><code>EXB_BAD_INDEX_NOTAVAIL</code>
+<td align=left>Index file is corrupt (avail node is not so marked): The internal index structure
+is corrupt (internal error).
+<tr>
+<td align=right><code>8514</code>
+<td align=left><code>EXB_RECNO_IS_ZERO</code>
+<td align=left>Cannot delete a key when passed a recNo of 0: The recNo (or 32-bit data) of a
+key must be specified for that key to be deleted.
+<tr>
+<td align=right><code>8522</code>
+<td align=left><code>EXB_UNKNOWN_INDEX</code>
+<td align=left>Not a Bullet IX4 index file: The index file format is not known.
+<tr>
+<td align=right><code>8523</code>
+<td align=left><code>EXB_KEY_TOO_LONG</code>
+<td align=left>Keylength GT MAX_KEY_LENGTH, or is 0: The length of the key is too long.
+<tr>
+<td align=right><code>8524</code>
+<td align=left><code>EXB_BAD_XLATE_INFO</code>
+<td align=left>Build key xlate.info is invalid: The data at KH.xlateExp[] is not valid.
+<tr>
+<td align=right><code>8525</code>
+<td align=left><code>EXB_SORT_STACK_OV</code>
+<td align=left>Sort stack exceeded max depth: Qsort failed. (Internal error.)
+<tr>
+<td align=right><code>8534</code>
+<td align=left><code>EXB_BAD_NODE_SIZE</code>
+<td align=left>NodeSize is not 512,1024,1536,2048, or 2560 (must be specified at open):  The
+node size must be specified at BltIx4OpenFile().  If the node size is not already known to
+the program, BltIx4InfoFile() should be used to find out.
+<tr>
+<td align=right><code>8535</code>
+<td align=left><code>EXB_FILENAME_TOO_LONG</code>
+<td align=left>Filename GT max path length (or null ptr):  This applies when the memo file
+is created.
+<tr>
+<td align=right><code>8538</code>
+<td align=left><code>EXB_BAD_SORT_CMP_CODE</code>
+<td align=left>SortCmp code (among those less than 32) is not valid:  This code is returned
+by <code>BltFuncIx4SortCmp()</code> when requesting HIGH_VALUES (only) when the .sortCmpCode
+is not a valid (beyond the last built-in sortCmpCode), or when the sortCmpCode is &gt; 32
+and KH.xUserSortCmpPtr is 0.
+<tr>
+<td align=right><code>8539</code>
+<td align=left><code>EXB_REQUIRES_FPU</code>
+<td align=left>Converting text to floating-pointing double requires FPU support: To convert
+string field data ("123") to for 64-bit or double floating-point for binary key <em>storage</em>
+requires an FPU.
+<tr>
+<td align=right><code>8541</code>
+<td align=left><code>EXB_KEYX_NULL</code>
+<td align=left>Expression is effectively NULL: The parsed key expression evaluates to a zero
+key length.
+<tr>
+<td align=right><code>8542</code>
+<td align=left><code>EXB_KEYX_TOO_LONG</code>
+<td align=left>TBLT_KH.expression GT IX4_MAX_EXP_SIZE bytes: The parsed key expression evaluates
+to a key longer than the maximum allowed size (196 bytes).
+<tr>
+<td align=right><code>8543</code>
+<td align=left><code>EXB_KEYX_SYM_TOO_LONG</code>
+<td align=left>Fieldname/funcname in expression GT 10 single-byte OEM chars: A field name in
+the DBF data header is longer than 10 characters.  The fieldname field is 11 bytes long, and
+the fieldname must be terminated with a 0, so a fieldname longer than 10 characters indicates
+a corrupt data file.
+<tr>
+<td align=right><code>8544</code>
+<td align=left><code>EXB_KEYX_SYM_UNKNOWN</code>
+<td align=left>Fieldname/funcname in expression unknown: A fieldname in the key expression
+is not found in the DBF header, and is not a reserved word.  The key expression can only
+use fieldnames found in the DBF header (DH.fd[].fieldName).
+<tr>
+<td align=right><code>8545</code>
+<td align=left><code>EXB_KEYX_TOO_MANY_SYMS</code>
+<td align=left>Too many symbols/fields used in expression: A maximum of 16 key components
+may be used in a key expression.
+<tr>
+<td align=right><code>8546</code>
+<td align=left><code>EXB_KEYX_BAD_SUBSTR</code>
+<td align=left>Invalid SUBSTR() operand in expression: SUBSTR() cannot be used on a field
+if that field is being used as a numeric key.  For example, fieldTypes N and F cannot
+be used with SUBSTR() unless the sortCmpCode is SORT_ASCII or SORT_NLS, or a sort code
+above 32; binary fields (Y, SORT_MIXED_*) cannot be used with SUBSTR() at all.
+<tr>
+<td align=right><code>8547</code>
+<td align=left><code>EXB_KEYX_BAD_SUBSTR_SZ</code>
+<td align=left>SUBSTR() exceeds field's size: The start offset plus the number of bytes to
+substring exceed the total length of the field.
+<tr>
+<td align=right><code>8548</code>
+<td align=left><code>EXB_KEYX_BAD_FORM</code>
+<td align=left>Didn't match expected symbol in expression or bad nesting: Expected right
+paren, comma, etc., was not matched; or, UPPER() cannot be used within a DESCEND(), for
+example <code>DESCEND(UPPER(FIELD_ONE))</code> is not valid.
+<tr>
+<td align=right><code>8549</code>
+<td align=left><code>EXB_KEYX_BAD_TYPE</code>
+<td align=left>Field type not compatible with sortCmp mode: Field type 'C' can only be used
+with SORT_ASCII, SORT_NLS, SORT_MIXED, or sortCmp codes above 32.
+<tr>
+<td align=right><code>8551</code>
+<td align=left><code>EXB_NO_READS_FOR_RUN</code>
+<td align=left>Unlikely, use different reindex buffer size: This should not occur.
+<tr>
+<td align=right><code>8552</code>
+<td align=left><code>EXB_TOO_MANY_RUNS</code>
+<td align=left>Unlikely, too many reindex runs (more than 65535 runs (8128 for 16-bit builds)):
+Increase the reindex buffer space, if possible, or use a smaller key length.  See the
+<a href="x_files.htm">File structures</a> section for details.
+<tr>
+<td align=right><code>8553</code>
+<td align=left><code>EXB_TOO_MANY_RUNS_FOR_BUFFER</code>
+<td align=left>Unlikely, too many reindex runs for run buffer (varies by buffer size, key size):
+Decrease the key length or increase the reindex buffer.  See
+<code>EXB_TOO_MANY_RUNS</code>.
+</table>
+<p>
+<table border=1 cellspacing=0 cellpadding=4>
+<caption><b>Data return codes (8600 to 8699)</b></caption>
+<tr>
+<th>rc
+<th>Codename
+<th>Explanation
+<tr>
+<td align=right><code>8601</code>
+<td align=left><code>EXB_EXT_XBLINK</code>
+<td align=left>xbLink handle is not internal DBF (xbLinkPtr is -1): All Bullet index routines
+that operate on data files require that KH.xbLinkPtr point to a valid DH structure, and not
+an external (non-Bullet) data file.
+<tr>
+<td align=right><code>8603</code>
+<td align=left><code>EXB_RECORD_TOO_LONG</code>
+<td align=left>Record length is GT 64K or GT bullet_MASZ: The record is longer than the
+maximum allowed.  The recommened maximum fixed-length record length is 1000 bytes.
+<tr>
+<td align=right><code>8605</code>
+<td align=left><code>EXB_BAD_FIELD_COUNT</code>
+<td align=left>Fields LTE 0 or GTE MAX_DBF_FIELDS: The number of fields as reported
+by the DBF header is greater than the maximum fields allowed, or is 0.
+<tr>
+<td align=right><code>8606</code>
+<td align=left><code>EXB_BAD_HEADER</code>
+<td align=left>Bad header:  The record length is 0 as reported by the DBF header.
+<tr>
+<td align=right><code>8609</code>
+<td align=left><code>EXB_BAD_RECNO</code>
+<td align=left>recNo=0, or GT recs in data file hdr, or not last recNo for debump: To physically
+remove a data record, the data record must be the last in the file (record number to remove must
+equal DH.noRecords).
+<tr>
+<td align=right><code>8610</code>
+<td align=left><code>WRN_RECORD_EXCLUDE</code>
+<td align=left>Record's tag byte matches exclude tag or does not match include tag: The
+KH.tagMarks data is non-zero, indicating that Bullet is to check if a data record should
+be excluded from consideration.  It is generated by the build-key routine.  High-level
+Bullet routines will not use record data whose key build returns with this code (such
+as the reindex routine).
+<tr>
+<td align=right><code>8611</code>
+<td align=left><code>EXB_EMPTY_FIELDLEN</code>
+<td align=left>Field length is 0: A field has its field length set to 0.
+<tr>
+<td align=right><code>8612</code>
+<td align=left><code>EXB_NO_RECORDS</code>
+<td align=left>No data records:  There are no data records for BltDataSort() or BltDataPack().
+</table>
+<p>
+<table border=1 cellspacing=0 cellpadding=4>
+<caption><b>Memo return codes (8700 to 8799)</b></caption>
+<tr>
+<th>rc
+<th>Codename
+<th>Explanation
+<tr>
+<td align=right><code>8701</code>
+<td align=left><code>WRN_CANNOT_OPEN_MEMO</code>
+<td align=left>DBF says memo file but memo open fails: The DBF's DH.fileID has bits 7 and 3
+set to 1, indicating a memo file is attached to this data file, yet the memo file open failed.
+The DBF file is opened by Bullet nevertheless.
+<tr>
+<td align=right><code>8703</code>
+<td align=left><code>EXB_BAD_BLOCKSIZE</code>
+<td align=left>Memo blocksize must be at least 24 bytes: The memo block size, specified in
+DH.memoBlockSize, must be at least 24 bytes to cover the size needed by the memo header.
+When .memoBlockSize is 0 the default size of 512 bytes is used.
+<tr>
+<td align=right><code>8704</code>
+<td align=left><code>EXB_MEMO_DELETED</code>
+<td align=left>Memo is deleted:  The memo record, as indicated by its availLink, is deleted.
+To be active, a memo record must have its availLink set to 0x8FFFF (or the value in
+DH.memoInUseFlag if not 0).  Even if deleted, BltGetMemo() still retrieves the memo record,
+though the memo's byte count is now rounded up to the next block size.
+<tr>
+<td align=right><code>8705</code>
+<td align=left><code>EXB_MEMO_PAST_END</code>
+<td align=left>Memo data requested is past end of record: The start offset for the memo
+read is beyond the last byte of memo data.  No memo data is read.
+<tr>
+<td align=right><code>8706</code>
+<td align=left><code>EXB_BAD_MEMONO</code>
+<td align=left>Memo number is not valid: Memo number is 0.
+<tr>
+<td align=right><code>8708</code>
+<td align=left><code>EXB_BAD_AVAIL_LINK</code>
+<td align=left>Memo avail link (in memoAvailBlock) cannot be valid (is 0): availLink is 0,
+which is not a valid value.  Backup database, then rebuild.
+<tr>
+<td align=right><code>8709</code>
+<td align=left><code>EXB_MEMO_ZERO_SIZE</code>
+<td align=left>Memo data has no size or bytes to size LT bytes to write:  BltMemoAdd() or
+BltMemoUpdate() is requested to write 0 bytes; or an add was requested to size the memo record
+maller than the bytes it was requested to write.
+<tr>
+<td align=right><code>8710</code>
+<td align=left><code>EXB_MEMO_IS_SMALLER</code>
+<td align=left>Memo attempt to shrink but already LTE size: BltMemoUpdate() requested that
+a memo record be shrunk but the memo record is already smaller than that size.
+<tr>
+<td align=right><code>8712</code>
+<td align=left><code>EXB_TOO_MANY_MEMOS</code>
+<td align=left>Memo pack, record has more than MAX_MEMO_FIELDS:  The built-in BltDataPack()
+routine is hard-coded for a maximum of 32 memo fields in a DBF record.  The typical record
+might have one or two memo fields.  The field types recognized as a memo field are 'M', 'B',
+and 'G'.
+</table>
+<br>
+<br>
+<br>
+<p>
+<center><font size=-1>All content Copyright &copy; 1999 Cornel Huth.  All rights reserved.</font></center>
+</body>
+</html>

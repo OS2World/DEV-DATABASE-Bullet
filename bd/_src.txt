@@ -1,0 +1,8 @@
+Bullet 3.0
+1-Jan-1999
+_src.txt
+
+See the documentation (in htm/), under "Tutorial: Examples", for getting
+started with these examples.
+
+

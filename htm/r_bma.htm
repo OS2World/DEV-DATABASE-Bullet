@@ -1,0 +1,54 @@
+<html>
+<head>
+<title>BltMemoAdd</title>
+</head>
+<body>
+<h4>BltMemoAdd</h4>
+<br>
+<a href="r_bmrh.htm">&lt;&nbsp;Prev</a>&nbsp;&nbsp;<a href="_toc.htm">TOC</a>&nbsp;&nbsp;<a href="r_bmd.htm">Next&nbsp;&gt;</a>
+<p>
+<pre>
+TBLT_RETC TBLT_ENTRY BltMemoAdd(TBLT_DH *dhPtr,
+                                ULONG bytesToSize,
+                                ULONG bytesToWrite,
+                                VOID *bufferPtr,
+                                ULONG *memoNoPtr,
+                                ULONG rsvFlag);
+
+
+ dhPtr          I:data file control structure
+ bytesToSize    I:initial size of the memo record
+ bytesToWrite   I:bytes of data to write from bufferPtr
+ bufferPtr      I:buffer of memo data to write
+ memoNoPtr      O:memo number of where data was written
+ rsvFlag        I:reserved, must be 0
+
+</pre>
+This routine writes new memo data to the memo file, returning the number
+of the first memo block used to store the data.  This number is to be
+converted by you to ASCII text ('0000000001', no zero terminator) and
+stored in the DBF record, in the appropriate memo field, as the memo number.
+<p>
+This routine does the initial write of a new memo.  Since a memo in Bullet
+can be any size, you can specify an initial size larger than the bytes you
+are writing.  This way, you can easily write a single 500KB data in chunks
+of, say, 8KB, without unncessarily fragmenting the memo file with updates.
+To do this you use this routine to size the memo to the expected size (this
+expected size is the size this memo is set to), then write any number of bytes
+to start (or even no bytes this time), and then follow-up with a
+<code>BltMemoUpdate()</code> for as many times as needed until the entire data
+has been written to the memo file.  The programmer must keep track of where in
+the memo the last write was when this technique is used, and to program
+<code>BltMemoUpdate()</code>'s start offset accordingly.
+<p>
+If the memo data to write does not need to be written in smaller chunks,
+set bytesToSize equal to bytesToWrite.
+<p>
+<em>Return:</em>&nbsp;Non-zero indicates an error, otherwise the memo has been added.
+<br>
+<br>
+<br>
+<p>
+<center><font size=-1>All content Copyright &copy; 1999 Cornel Huth.  All rights reserved.</font></center>
+</body>
+</html>

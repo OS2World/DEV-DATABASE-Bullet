@@ -1,0 +1,49 @@
+<html>
+<head>
+<title>Bullet 3.0 [Changes from Bullet 2.x/1.x]</title>
+</head>
+<body>
+<h3>Changes from Bullet 2.x/1.x</h3>
+<br>
+<a href="epilog.htm">&lt;&nbsp;Prev</a>&nbsp;&nbsp;<a href="_toc.htm">TOC</a>&nbsp;&nbsp;<a href="specs.htm">Next&nbsp;&gt;</a>
+<p>
+<h4>Compatibility</h4>
+Regarding compatibility with previous versions...there is none.  The
+API is totally new, though the functions themselves map nearly 1:1 with
+Bullet 2.x.  The index file format is new (IX4).  The main reason for this
+is to allow longer key lengths (primarily for dealing with unicode, which
+will be better supported in a later release).  If you need to remain
+compatible with 1.x or 2.x use those versions.
+<p>
+The DBF data file format is still same.  However, the DBT format has been
+changed with regard to deleted memo records.  In Bullet 2.x, deleted memos
+kept their size state -- in other words, if a memo had 400 data bytes
+then its size was kept as 408 (8 bytes of overhead; the memo size routine
+returned the data bytes' size, or 400).  In Bullet 3, deleted memos have
+their size (as stored in the memo file itself) converted to blocks.  So,
+that 408-byte memo would have its memo size (again, as stored in the memo
+file) set to 1, for one block (block size defaults to 512 bytes).  This
+affects deleted memos only.  The optional <code>VALIDATE.EXE</code> program
+can be used to convert memo files from Bullet 2.x to Bullet 3 and back (only
+needed if there are deleted memos; packing the database to remove deleted
+memos is another way).  Be sure to read the Validate documentation before
+doing any conversion.
+<p>
+Multi-threaded access is no longer guarded by Bullet.  Instead, the programmer
+is given the task of ensuring that multiple access of a handle pack (TBLT_DH or
+TBLT_KH) is serialized.  B2 serialized access to Bullet itself at the process level;
+B3 lets the programmer serialize at the handle level, meaning multiple threads
+may be inside Bullet at any one time (B2 allowed only one thread per process
+in its code at any one at a time).  The TBLT_KH/TBLT_DH structures include a slot,
+.mutexHandle, for a semaphore, though Bullet itself does not use it.  The
+supplemental documentation covers this more.
+<p>
+<h4>Support</h4>
+Bullet 2.x and Bullet 1.x continue to be supported with bug fixes, as
+required.
+<p>
+<br>
+<br>
+<center><font size=-1>All content Copyright &copy; 1999 Cornel Huth.  All rights reserved.</font></center>
+</body>
+</html>

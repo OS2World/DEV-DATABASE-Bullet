@@ -1,0 +1,57 @@
+<html>
+<head>
+<title>BltIx4Update</title>
+</head>
+<body>
+<h4>BltIx4Update</h4>
+<br>
+<a href="r_biiex.htm">&lt;&nbsp;Prev</a>&nbsp;&nbsp;<a href="_toc.htm">TOC</a>&nbsp;&nbsp;<a href="r_biuex.htm">Next&nbsp;&gt;</a>
+<p>
+<pre>
+TBLT_RETC TBLT_ENTRY BltIx4Update(TBLT_KH *khPtr,
+                                  VOID *keyBufferPtr,
+                                  ULONG recNo,
+                                  VOID *newRecPtr,
+                                  ULONG *actionPtr);
+
+
+ khPtr          I:index file control structure
+ keyBufferPtr   O:new key stored (if different)
+ recNo          I:recNo of record to update
+ recordPtr      I:updated record data
+ actionPtr      O:action taken
+
+</pre>
+This routine updates (if needed) the data record identified by recNo, builds a
+key for it (if needed), and stores that key and recNo into the index file (if
+needed) (not physically in that order).
+<p>
+A single index file and a single data file are accessed.  To perform more
+complex updates see <code>BltIx4UpdateEx()</code>.
+<p>
+After a successful update, where the key has changed (action=3), the index
+position is set to the new key.  <code>FLAGS_ATOMIC_BIT</code> can be set to
+restart at the previous, or any, position (see <code>BltIx4GetNext()</code>).
+<p>
+If the key store operation failed, for whatever reason, the data record
+update operation that preceded it will be backed out automatically,
+thereby restoring the database to its original state.
+<p>
+ActionPtr is set to one of the following values:
+<pre>
+  0 = nothing done (error encountered)
+  1 = updated data record only (key did not change)
+  3 = updated index and updated data record (key changed)
+ 16 = could not store new key (reindex required)
+ 17 = record update failed (data is unchanged)
+      and could not restore original key (reindex required)
+</pre>
+<em>Return:</em>&nbsp;Non-zero indicates an error, otherwise the data record
+located at the record number is updated if required and its key updated if required.
+<br>
+<br>
+<br>
+<p>
+<center><font size=-1>All content Copyright &copy; 1999 Cornel Huth.  All rights reserved.</font></center>
+</body>
+</html>

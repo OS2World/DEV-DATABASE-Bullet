@@ -1,0 +1,33 @@
+<html>
+<head>
+<title>BltIx4CopyHeader</title>
+</head>
+<body>
+<h4>BltIx4CopyHeader</h4>
+<br>
+<a href="r_bifh.htm">&lt;&nbsp;Prev</a>&nbsp;&nbsp;<a href="_toc.htm">TOC</a>&nbsp;&nbsp;<a href="r_birh.htm">Next&nbsp;&gt;</a>
+<p>
+<pre>
+TBLT_RETC TBLT_ENTRY BltIx4CopyHeader(TBLT_KH *khPtr,
+                                      TBLT_FNCHAR *filenamePtr);
+
+
+ khPtr          I:index file control structure
+ filenamePtr    I:name of new index file
+
+</pre>
+This routine copies the structure of the khPtr's index file to a new file
+named in filenamePtr.
+<p>
+The new file is created by this routine and its structure is a clone of the
+passed IX4 structure.  The new file will have -0- keys, but otherwise is
+identical to TBLT_KH.  The TBLT_KH file is not affected.
+<p>
+<em>Return:</em>&nbsp;Non-zero indicates an error, otherwise a new file is created.
+<br>
+<br>
+<br>
+<p>
+<center><font size=-1>All content Copyright &copy; 1999 Cornel Huth.  All rights reserved.</font></center>
+</body>
+</html>

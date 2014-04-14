@@ -1,0 +1,23 @@
+Bullet 3.0
+1-Jan-1999
+__htm.txt
+
+This is the Bullet 3.0 online documentation.  This is the complete documentation
+as of the date above.
+
+An HTML 3.2 compatible reader is needed.
+
+To start it up, the following can be used:
+
+ netscape.exe file:///_toc.htm
+
+or as your browser/reader requires to load a file.htm.
+
+_toc.htm is the Table of contents page, from where you can easily navigate
+the documentation.  A few, select pages will link to the URL
+
+ http://40th.com/(some URL)
+
+so you will have to be online to read those (like the history.html and
+orderform.html pages).
+

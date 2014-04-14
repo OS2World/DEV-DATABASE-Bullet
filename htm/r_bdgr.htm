@@ -1,0 +1,37 @@
+<html>
+<head>
+<title>BltDataGetRecord</title>
+</head>
+<body>
+<h4>BltDataGetRecord</h4>
+<br>
+<a href="r_bdur.htm">&lt;&nbsp;Prev</a>&nbsp;&nbsp;<a href="_toc.htm">TOC</a>&nbsp;&nbsp;<a href="r_bds.htm">Next&nbsp;&gt;</a>
+<p>
+<pre>
+TBLT_RETC TBLT_ENTRY BltDataGetRecord(TBLT_DH *dhPtr,
+                                      ULONG recNo,
+                                      VOID *recordPtr);
+
+
+ dhPtr          I:data file control structure
+ recNo          I:number of record to read
+ recordPtr      O:record into which recNo is read
+
+</pre>
+This routine reads an existing data record.
+<p>
+Bullet reads at the record-granular level.  This routine reads an entire
+data record, by record number.  The delete tag (first byte of the record)
+is not considered when using this routine; the record is read even if
+marked as deleted.
+<p>
+<em>Return:</em>&nbsp;Non-zero indicates an error, otherwise the record is stored in recordPtr.
+<br>
+<br>
+<br>
+<br>
+<br>
+<p>
+<center><font size=-1>All content Copyright &copy; 1999 Cornel Huth.  All rights reserved.</font></center>
+</body>
+</html>

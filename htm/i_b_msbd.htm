@@ -1,0 +1,243 @@
+<html>
+<head>
+<title>Bullet 3.0 [BASIC define (b3msbdef.bi)]</title>
+</head>
+<body>
+<h5>File: b3msbdef.bi</h5>
+<br>
+<a href="i_b_msb.htm">&lt;&nbsp;Prev</a>&nbsp;&nbsp;<a href="_toc.htm">TOC</a>&nbsp;&nbsp;<a href="i_b_msbt.htm">Next&nbsp;&gt;</a>
+<pre>
+'
+'  b3msbdef.bi
+'  1-Jan-1999
+'  Bullet 3 Basic include, defines for ms basic7/vbdos
+'  Copyright (C)1999 Cornel Huth        http://40th.com/
+'
+
+CONST MAX.DBF.FIELDS    = 1024        ' max fields in a DBF
+CONST MAX.RECORD.LENGTH =65024        ' max record length (never more than 65535, recommend max is 1024)
+                                      ' record length must be LTE bullet_MASZ (max single alloc size)
+CONST MAX.KEY.LENGTH      =196        ' max length of a key value, in bytes
+CONST IX4.MAX.EXP.SIZE    =380        ' max length of key expression, in bytes (incl. 0T)
+
+CONST XACTION.IX4.BIT=1               ' BLTKH.xactionFlag bit0
+CONST XACTION.DBF.BIT=1               ' BLTDH.xactionFlag bit0
+CONST XACTION.DBT.BIT=2               ' BLTDH.xactionFlag bit1
+
+CONST FLAGS.DIRTY.BIT            =1   ' BLTDH/BLTKH.flags, bit0 (R/O)
+CONST FLAGS.FULL.LOCK.BIT        =2   ' BLTDH/BLTKH.flags, bit1 (R/O)
+CONST FLAGS.FULL.SHARED.LOCK.BIT =4   ' BLTDH/BLTKH.flags, bit2 (R/O)
+CONST FLAGS.READ.THROUGH.LOCK.BIT=8   ' BLTDH/BLTKH.flags, bit3 (set at open)
+CONST FLAGS.SKIP.DELETED.BIT     =16  ' BLTDH.flags, bit4 (set at data open)
+CONST FLAGS.ATOMIC.BIT           =16  ' BLTKH.flags, bit4 (set at ix4 open)
+CONST FLAGS.HDR.LOCK.BIT         =32  ' BLTDH.flags, bit5 (R/O)
+CONST FLAGS.HDR.SHARED.LOCK.BIT  =64  ' BLTDH.flags, bit6 (R/O)
+CONST FLAGS.READONLY.BIT         =128 ' BLTDH/BLTKH.flags, bit7 (set at open)
+
+CONST FLAGSEX.IU.SKIPDATA        =1   ' insertEx/updateEx skips data record add/update
+CONST FLAGSEX.LOCK.DUAL          =128 ' lockEx has KH handle with dual operation on its xbLink handle
+
+
+CONST SORT.ASCII=1    ' sort by: ASCII value  (values 1-255 for low-byte of sortCmpCode)
+CONST SORT.NLS  =2    ' NLS                   (up to 16 components allowed but all are to be...
+CONST SORT.S16  =3    ' 16-bit signed integer (...of the same sort type unless SORT_MIXED is used)
+CONST SORT.U16  =4    ' 16-bit unsigned integer |-------------------------------------------|
+CONST SORT.S32  =5    ' 32-bit signed integer   | See the documentation for important notes |
+CONST SORT.U32  =6    ' 32-bit unsigned integer | on 64-bit and _MIXED-data requirements    |
+CONST SORT.S64  =7    ' 64-bit signed           |-------------------------------------------|
+CONST SORT.U64  =8    ' 64-bit unsigned
+CONST SORT.MIXED=9    ' mixed types allowed (an N|F field's key is stored as a DOUBLE in the index)
+                      ' 10-31 reserved, 32-255 free
+
+CONST SORT.MIXED.S16 =51 ' 16-bit signed as part of SORT_MIXED ('3')
+CONST SORT.MIXED.U16 =52 ' 16-bit unsigned                     ('4')
+CONST SORT.MIXED.S32 =53 ' 32-bit signed     these are special field types... ('5')
+CONST SORT.MIXED.U32 =54 ' 32-bit unsigned   ...not sortCmp codes             ('6')
+CONST SORT.MIXED.S64 =55 ' 64-bit signed                       ('7')
+CONST SORT.MIXED.U64 =56 ' 64-bit unsigned                     ('8')
+CONST SORT.MIXED.DBL =89 ' 8-byte floating-point double        ('Y')
+                         ' the above FIELD TYPES are for -binary- data fields
+                         ' dBASE standard field types are: C,N,D,L,M
+                         ' dBASE extended field types are: F,B,G
+
+CONST SORT.DUPS.ALLOWED=&amp;H10000 ' bit16 of sortCmpCode (LONG)
+CONST SORT.USE.ANSI.SET=&amp;H20000 ' bit17                (LONG)
+
+CONST LOCK.MODE.EXCLUSIVE=0
+CONST LOCK.MODE.SHARED   =1
+CONST LOCK.MODE.ATOMIC   =2
+CONST LOCK.MODE.SH2EX=(LOCK.MODE.EXCLUSIVE OR LOCK.MODE.ATOMIC) ' 2
+CONST LOCK.MODE.EX2SH=(LOCK.MODE.SHARED OR LOCK.MODE.ATOMIC)    ' 3
+
+
+CONST BLTVAR.IFS    = -4    ' IFS pointers (R/O)
+CONST BLTVAR.DLLH   = -3    ' HW=ds, LW=sel is environment (R/O)
+CONST BLTVAR.MAF    = -2    ' memory frees (R/O)
+CONST BLTVAR.MAA    = -1    ' memory allocations (R/O)
+CONST BLTVAR.VERSION=  0    ' returns pointer to Bullet version string
+CONST BLTVAR.MPNL   =  1    ' default max pathname length
+CONST BLTVAR.MPCL   =  2    ' default max pathname component length
+CONST BLTVAR.MPXL   =  3    ' default max pathname extension length
+CONST BLTVAR.MFSF   =  4    ' max file size fudge to guard against math overflow near .maxFileSize
+CONST BLTVAR.MARSV  =  10   ' default bytes to hold back from Bullet reindex routine
+CONST BLTVAR.MASZRX =  11   ' default max total memory, in bytes, reindex is allowed to allocate
+CONST BLTVAR.MASZ   =  12   ' default max single allocation request size, in bytes, that will be made
+CONST BLTVAR.MCBSZ  =  13   ' memo copy buffer size
+CONST BLTVAR.MCBMAM =  14   ' memo copy buffer/data sort memory allocation strategy
+
+CONST CRYPTO.FROM.RECGET  =1
+CONST CRYPTO.FROM.RECADD  =2
+CONST CRYPTO.FROM.RECUPD  =4
+CONST CRYPTO.FROM.XRECADD =3
+CONST CRYPTO.FROM.XRECUPD =5
+
+CONST CRYPTO.FROM.KEYGET  =16
+CONST CRYPTO.FROM.KEYADD  =32
+CONST CRYPTO.FROM.KEYADDBULK =160
+
+CONST OPENFLAGS.COMMIT       = &amp;H400000 ' slow file writes (DOS 4+, all)
+CONST OPENFLAGS.NOCRIT       = &amp;H200000 ' critical errors passed to caller (DOS 4+, all)
+CONST OPENFLAGS.NOCACHE      = &amp;H100000 ' (OS/2)
+CONST OPENFLAGS.FOURGB       = &amp;H100000 ' (FAT32)
+CONST OPENFLAGS.IO.RNDSEQ    = &amp;H030000 ' random access, with some sequential access (OS/2)
+CONST OPENFLAGS.IO.RND       = &amp;H020000 ' mostly random access (OS/2)
+CONST OPENFLAGS.IO.SEQ       = &amp;H010000 ' mostly sequential access (OS/2)
+                                        ' the above values are SHR 8 internally
+CONST OPENFLAGS.NOINHERIT    = &amp;H000080 ' child programs do not inherit asMode
+CONST OPENFLAGS.DENY.NONE    = &amp;H000040 ' share: do not deny others
+CONST OPENFLAGS.DENY.READ    = &amp;H000030 ' share: deny others read
+CONST OPENFLAGS.DENY.WRITE   = &amp;H000020 ' share: deny others write
+CONST OPENFLAGS.DENY.RW      = &amp;H000010 ' share: deny others read/write
+CONST OPENFLAGS.ACCESS.READ7 = &amp;H000004 ' access: read-only, file timestamp not altered (DOS7)
+CONST OPENFLAGS.ACCESS.RW    = &amp;H000002 ' access: read/write
+CONST OPENFLAGS.ACCESS.WRITE = &amp;H000001 ' access: write only
+CONST OPENFLAGS.ACCESS.READ  = &amp;H000000 ' access: read only
+
+' -------------------------------------------------------------------------------------------------------
+' Error codes
+
+CONST EXB.FUNCTION.NOT.IMPLEMENTED   =1   ' function is not implemented
+CONST EXB.NOT.ENOUGH.MEMORY          =8   ' cannot get memory requested
+CONST EXB.INVALID.ACCESS             =12  ' invalid file access flags
+CONST EXB.INVALID.PARAMETER          =13  ' parameter is not valid
+CONST EXB.INVALID.DRIVE              =15  ' not a valid drive letter
+CONST EXB.UNEXPECTED.EOF             =38  ' unexpect EOF (bytes read != bytes asked)
+CONST EXB.DISK.FULL                  =39  ' disk full on WriteFile
+CONST EXB.FILE.EXISTS                =80  ' cannot create file since it already exists
+CONST EXB.SEM.OWNER.DIED             =105 ' in place of Win32 error 80h (mutex)
+CONST EXB.ATOMIC.LOCK.NOT.SUPPORTED  =174 ' only OS/2 32-bit supports atomic locks
+CONST EXB.READ.LOCKS.NOT.SUPPORTED   =175 ' OS/2 and WinNT support read (shared, non-exclusive) locks
+CONST EXB.TIMEOUT                    =640 ' in place of Win32 error 102h (mutex)
+
+' Other operating system errors are as returned by OS itself
+
+' System/general error codes
+
+CONST EXB.216501             =8251 ' INT21/6501h not supported by DOS extender (do not use default cc/cp)
+CONST EXB.216506             =8256 ' INT21/6506h not supported by DOS extender (provide a sort table)
+CONST EXB.216520             =8259 ' INT21/6520h not supported by DOS extender (can't upper case)
+
+CONST WRN.USING.ST850        =8295 ' code page info could not be loaded, using default cp=850 (DOS, create ix4)
+CONST WRN.USING.ST1252       =8296 ' cp info could not be loaded, using default cp=1252 (DOS, create ix4)
+CONST EXB.DS.NOT.SS          =8298 ' cannot perform callback (MS-BASIC only: ds != ss)
+CONST EXB.ILLEGAL.CMD        =8300 ' function not allowed
+CONST EXB.SYSTEM.HANDLE      =8305 ' Bullet won't use or close handles 0-2
+CONST EXB.FILE.NOT.OPEN      =8306 ' file not open (not Bullet handle, including xbLink)
+CONST EXB.FILE.IS.DIRTY      =8307 ' tried to reload/zap header but current still dirty
+CONST EXB.BAD.FILETYPE       =8308 ' tried key op on non-key file, data op on non...
+CONST EXB.EXPIRED            =8313 ' evaluation time period has expired
+CONST EXB.BAD.INDEX          =8314 ' BltGetVer/SetVar index is not valid
+CONST EXB.FILE.BOUNDS        =8316 ' file size GT max file size (or GT half that if read-through locks)
+CONST EXB.READONLY           =8317 ' handle has read-only flag active and attempted to write to it
+CONST WRN.INCOMPLETE.XACTION =8318 ' header xactionFlag indicates an incomplete transaction (IX4|DBF|DBT)
+CONST EXB.FILE.ALREADY.OPEN  =8319 ' .handle is non-zero so already has an open file handle
+
+CONST EXB.BAD.ALLOC.SIZE     =8351 ' requested allocation size is more than bullet.MASZ, or is 0
+CONST EXB.IO.WRAP.DETECTED   =8352 ' file I/O for bytes to/from memory address would cause segment wrap
+
+CONST EXB.NULLFNPTR          =8395 ' null function pointer detected (without default function available)
+CONST EXB.NULLPTR            =8396 ' general null pointer detected
+CONST EXB.INVALID.DLL        =8398 ' DLL/LIB is not valid
+
+' Multi-access error codes
+
+CONST EXB.BAD.LOCK.MODE      =8401 ' lock mode not valid
+CONST EXB.NOTHING.TO.UNLOCK  =8404 ' no outstanding full locks
+CONST EXB.ALREADY.FULL.LOCK  =8405 ' already have a full lock so cannot record lock/header lock
+CONST EXB.ALREADY.HDR.LOCK   =8406 ' already have a hdr lock so cannot full lock
+CONST EXB.DIFFERENT.LOCK.MODE=8407 ' current lock does not match new lock mode (shared/exclusive)
+CONST EXB.SAME.LOCK.MODE     =8408 ' current lock same as new lock mode (relock)
+
+' Index error codes
+
+CONST EXB.KEY.NOT.FOUND      =8501 ' exact match of key not found (also, recNo not same, if specified)
+CONST EXB.KEY.EXISTS         =8502 ' key exists already and dups not allowed (or key+recno exists w/dups)
+CONST EXB.END.OF.FILE        =8503 ' already at last index order
+CONST EXB.TOP.OF.FILE        =8504 ' already at first index order
+CONST EXB.EMPTY.FILE         =8505 ' nothing to do since no keys
+CONST EXB.BAD.INDEX.STACK    =8507 ' index file is corrupt (stack over/underflow)
+CONST EXB.BAD.INDEX.READ0    =8508 ' index file is corrupt (read attempt of node 0)
+CONST EXB.BAD.INDEX.WRITE0   =8509 ' index file is corrupt (write attempt to node 0)
+CONST EXB.SEEK.PREV.FAILED   =8510 ' seek prev failed
+CONST EXB.BAD.INDEX.ROOTNODE =8511 ' index file is corrupt (root node cannot = 0)
+CONST EXB.BAD.INDEX.KEYCOUNT =8512 ' index file is corrupt (key count GT max keys on node)
+CONST EXB.BAD.INDEX.NOTAVAIL =8513 ' index file is corrupt (avail node is not so marked)
+CONST EXB.RECNO.IS.ZERO      =8514 ' cannot delete a key when passed a recNo of 0
+
+CONST EXB.UNKNOWN.INDEX      =8522 ' not a Bullet IX4 index file
+CONST EXB.KEY.TOO.LONG       =8523 ' keylength GT MAX.KEY.LENGTH, or is 0
+CONST EXB.BAD.XLATE.INFO     =8524 ' build key xlate.info is invalid
+CONST EXB.SORT.STACK.OV      =8525 ' sort stack exceeded max depth
+
+CONST EXB.BAD.NODE.SIZE      =8534 ' nodeSize is not 512,1024,1536,2048,2560 (must be specified at open)
+CONST EXB.FILENAME.TOO.LONG  =8535 ' filename GT max path length (or null ptr)
+CONST EXB.BAD.SORT.CMP.CODE  =8538 ' sortCmp code (among those less than 20) is not valid
+CONST EXP.REQUIRES.FPU       =8539 ' converting text to floating-pointing double requires FPU support
+
+CONST EXB.KEYX.NULL          =8541 ' expression is effectively NULL
+CONST EXB.KEYX.TOO.LONG      =8542 ' KH.expression GT 380 bytes
+CONST EXB.KEYX.SYM.TOO.LONG  =8543 ' fieldname/funcname in expression GT 10 single-byte OEM chars
+CONST EXB.KEYX.SYM.UNKNOWN   =8544 ' fieldname/funcname in expression unknown
+CONST EXB.KEYX.TOO.MANY.SYMS =8545 ' too many symbols/fields used in expression
+CONST EXB.KEYX.BAD.SUBSTR    =8546 ' invalid SUBSTR() operand in expression
+CONST EXB.KEYX.BAD.SUBSTR.SZ =8547 ' SUBSTR() exceeds field's size
+CONST EXB.KEYX.BAD.FORM      =8548 ' didn't match expected symbol in expression or bad nesting
+CONST EXB.KEYX.BAD.TYPE      =8549 ' field type not compatible with sortCmp mode
+
+CONST EXB.NO.READS.FOR.RUN   =8551 ' unlikely, use different reindex buffer size
+CONST EXB.TOO.MANY.RUNS      =8552 ' unlikely, too many reindex runs (more than 65535 runs (8128 for 16-bit builds))
+CONST EXB.TOO.MANY.RUNS.FOR.BUFFER=8553 ' unlikely, too many reindex runs for run buffer (varies by buffer size, key size)
+
+' Data error codes
+
+CONST EXB.EXT.XBLINK         =8601 ' xbLink handle is not internal DBF (xbLinkPtr is -1)
+CONST EXB.RECORD.TOO.LONG    =8603 ' record length is GT 64K or GT bullet.MASZ
+CONST EXB.BAD.FIELD.COUNT    =8605 ' fields LTE 0 or GT MAX.FIELDS (Init,Open)
+CONST EXB.BAD.HEADER         =8606 ' bad header
+CONST EXB.BAD.RECNO          =8609 ' recNo=0, or GT recs in data file hdr, or not last recNo for debump
+CONST WRN.RECORD.EXCLUDE     =8610 ' record's tag byte matches exclude tag or does not match include tag
+CONST EXB.EMPTY.FIELDLEN     =8611 ' field length is 0
+CONST EXB.NO.RECORDS         =8612 ' no data records
+
+' Memo error codes
+
+CONST WRN.CANNOT.OPEN.MEMO   =8701 ' DBF says memo file but memo open fails
+CONST EXB.BAD.BLOCKSIZE      =8703 ' memo blocksize must be at least 24 bytes
+CONST EXB.MEMO.DELETED       =8704 ' memo is deleted
+CONST EXB.MEMO.PAST.END      =8705 ' memo data requested is past end of record
+CONST EXB.BAD.MEMONO         =8706 ' memo number is not valid
+CONST EXB.MEMO.IN.USE        =8707 ' memo add encountered likely corrupt memo file
+CONST EXB.BAD.AVAIL.LINK     =8708 ' memo avail link (in memoAvailBlock) cannot be valid (is 0)
+CONST EXB.MEMO.ZERO.SIZE     =8709 ' memo data has no size
+CONST EXB.MEMO.IS.SMALLER    =8710 ' memo attempt to shrink but already LTE size
+CONST EXB.TOO.MANY.MEMOS     =8712 ' memo pack, record has more than MAX.MEMO.FIELDS
+
+' end b3msdef.bi
+</pre>
+<br>
+<br>
+<br>
+<br>
+<center><font size=-1>All content Copyright &copy; 1999 Cornel Huth.  All rights reserved.</font></center>
+</body>
+</html>

@@ -1,0 +1,38 @@
+<html>
+<head>
+<title>Bullet 3.0 [C/C++ Header Files]</title>
+</head>
+<body>
+<h4>C/C++ Header Files</h4>
+<br>
+<a href="refinc.htm">&lt;&nbsp;Prev</a>&nbsp;&nbsp;<a href="_toc.htm">TOC</a>&nbsp;&nbsp;<a href="refinc.htm">Next&nbsp;&gt;</a>
+<pre>
+//
+// 1-Jan-1999
+// Bullet 3 master include
+//
+
+#ifndef BULLET_3_H
+#define BULLET_3_H
+
+#if defined(BLT_WIN32)
+ <a href="i_c_w32.htm">#include "b3win32.h"</a>
+#elif defined(BLT_WIN16)
+ <a href="i_c_w16.htm">#include "b3win16.h"</a>
+#elif defined(BLT_OS232)
+ <a href="i_c_o32.htm">#include "b3os232.h"</a>
+#elif defined(BLT_DOS32)
+ <a href="i_c_d32.htm">#include "b3dos32.h"</a>
+#elif defined(BLT_DOS16)
+ <a href="i_c_d16.htm">#include "b3dos16.h"</a>
+#else
+ #error [Bullet] Platform (BLT_WIN32, etc.) define was not specified
+#endif
+
+#endif
+</pre>
+<br>
+<br>
+<center><font size=-1>All content Copyright &copy; 1999 Cornel Huth.  All rights reserved.</font></center>
+</body>
+</html>

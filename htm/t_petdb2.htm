@@ -1,0 +1,338 @@
+<html>
+<head>
+<title>Bullet 3.0 [Tutorial PET DB:  Database Structure]</title>
+</head>
+<body>
+<h4>Database Structure</h4>
+<br>
+<a href="t_petdb1.htm">&lt;&nbsp;Prev</a>&nbsp;&nbsp;<a href="_toc.htm">TOC</a>&nbsp;&nbsp;<a href="t_petdb3.htm">Next&nbsp;&gt;</a>
+<p>
+The PET database has three base tables:
+<p>
+<ol>
+<li>Product
+<li>Customer
+<li>Problem/Enhancement
+</ol>
+<p>
+The Product (P) and Customer (C) tables could be used, and probably would be, by
+other MIS personal (for example, sales).  The Problem and Enhancement (bug) (B)
+table would be used by the development team.  For this database all three tables
+are used.  The B table is a combined problem and enhancement table, with both problem
+reports and enhancement requests in the same table.  This table could be split, but
+this tutorial is using the assumption that an enhancement request is the same as a
+problem.
+<p>
+&nbsp;<br>
+The <strong>Product table</strong> stores product name, number, and version.  It
+is possible to have more than one entry for a product <em>if</em>&nbsp; the version
+number differs.  The primary key is a composite key made from the product ID code and
+version number: <u>PID+PVER</u>.  The key length is 7 bytes (3+4 bytes).
+<p>
+The product code is a number (in ASCII text) from 401 to 499.  This field could
+have been typed as an N field, but since it's domain is limited to a small set,
+it is simpler to deal with this field as a C field (including a 0T).  The
+version number is alphanumeric (may be all numbers, all letters, or a mix).
+The version number is always 4 characters.  The product name may be up to 53
+characters and is terminated by a 0.  It, as all C field types in this database,
+is left-justified within the field.  Other likely fields, such as release date and
+support period, are not included.
+<p>
+<table border cellspacing=1 cellpadding=4>
+<caption>Product table definition</caption>
+<tr>
+<th>fieldName
+<th>type
+<th>size
+<th>example
+<th>notes
+<tr>
+<td>unnamed
+<td align=center>n/a
+<td align=center>1
+<td align=center><code>'&nbsp;'</code>
+<td><code>*</code> (ASCII 42) marks record as deleted
+<tr>
+<td>PID
+<td align=center>C
+<td align=center>4
+<td align=center><code>"401"</code>
+<td>PK comp 1 of 2, ASCII text (0T, "401" to "499")
+<tr>
+<td>PVER
+<td align=center>C
+<td align=center>5
+<td align=center><code>"1200"</code>
+<td>PK comp 2 of 2, ASCII text (0T, alphanumeric, always 4 chars)
+<tr>
+<td>PNAME
+<td align=center>C
+<td align=center>54
+<td align=center><code>"UmaNet 12.00"</code>
+<td>zero-terminated string (53 max chars + 0T, left-justified within field)
+<tr>
+<td>&nbsp;
+<td>&nbsp;
+<td align=center>64
+<td>= record length
+<td>&nbsp;
+</table>
+<p>
+<table border cellspacing=1 cellpadding=4>
+<caption>Product table data</caption>
+<th>*
+<th align=center><u>PID</u>
+<th align=center><u>PVER</u>
+<th align=center>PNAME
+<tr>
+<td>&nbsp;
+<td align=right>401
+<td align=center>1200
+<td align=left>UmaNet 12.00<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code>
+<tr>
+<td>&nbsp;
+<td align=right>405
+<td align=center>0100
+<td align=left>UmaScan 1.00
+</table>
+<p>
+<hr align=center width="67%">
+<p>
+The <strong>Customer table</strong> stores customer ID, name, address, phone,
+and e-mail.  There should not be more than one entry per customer, but it's
+possible that this can occur if, for example, the customer has a new address.
+For this tutorial, it is expected that the above cases are not going to happen,
+and that the customer will always remember his CID in all transactions.
+<p>
+The primary key is the <u>CID</u> field.  This field is generated at data entry,
+by the program, by combining the last name (first 4 characters, with the space
+character used to pad out to four), the first initial, and the first 3 characters
+of the zip code (or 999 if no postal code).  The key length is 8 bytes (4+1+3 bytes),
+even though the CID field in the data record is sized to 9 bytes (SUBSTR() is
+used in the key expression to use only the first 8 characters of this field).  I've
+sized the data field to 9 bytes to allow a 0T in the data record; this is a design
+decision, and could be 8 bytes if the 0T were not wanted.
+<p>
+For this tutorial, the field count has been kept low so the name and
+address fields are just one field each.  It might be useful to break
+out the name field to first, last, middle, and the address to company,
+street, city, state, zip, country.  All the fields in the Customer table
+are C type, and their data (strings) are zero-terminated.
+<p>
+<table border cellspacing=1 cellpadding=4>
+<caption>Customer table definition</caption>
+<tr>
+<th>fieldName
+<th>type
+<th>size
+<th>example
+<th>notes
+<tr>
+<td>unnamed
+<td align=center>n/a
+<td align=center>1
+<td align=center><code>'&nbsp;'</code>
+<td><code>*</code> (ASCII 42) marks record as deleted
+<tr>
+<td>CID
+<td align=center>C
+<td align=center>9
+<td align=center><code>"NaugP782"</code>
+<td>PK, 0T, &nbsp;lastname(4),first(1),zip(3)
+<tr>
+<td>CNAME
+<td align=center>C
+<td align=center>40
+<td align=center><code>"Peggy S Naughton"</code>
+<td>0T
+<tr>
+<td>CADDR
+<td align=center>C
+<td align=center>96
+<td align=center><code>"PSN Inc/90 N St/Town/ST/78230/US"</code>
+<td>0T
+<tr>
+<td>CPHONE
+<td align=center>C
+<td align=center>30
+<td align=center><code>"8885551234"</code>
+<td>0T
+<tr>
+<td>CEMAIL
+<td align=center>C
+<td align=center>64
+<td align=center><code>"psn@naughton.com"</code>
+<td>0T
+<tr>
+<td>&nbsp;
+<td>&nbsp;
+<td align=center>240
+<td>= record length
+<td>&nbsp;
+</table>
+<p>
+<table border cellspacing=1 cellpadding=4>
+<caption>Customer table data</caption>
+<th>*
+<th align=center><u>CID</u>
+<th align=center>CNAME
+<th align=center>CADDR
+<th align=center>CPHONE
+<th align=center>CEMAIL
+<tr>
+<td>&nbsp;
+<td align=left>NaugP782
+<td align=left>P Naughton
+<td align=left>Street/City/ST/Zip/Ctry
+<td align=left>8885551212
+<td align=left>psn@naughton.com
+<tr>
+<td>&nbsp;
+<td align=left>AngsS844
+<td align=left>S Angstl
+<td align=left>Street/City/ST/Zip/Ctry
+<td align=left>999
+<td align=left>mimuelle@sozw.fh-muenchen.de
+</table>
+<p>
+<hr align=center width="67%">
+<p>
+The <strong>Problem/Enhancement (bug) table</strong> stores the ID of the product (product
+ID plus product version), the sequence number for this BID, the date, report type, priority
+(severity), the customer ID, resolution status, a short description, and a long description.
+<p>
+The primary key is a composite key made from the <u>BID</u> and <u>BSEQ</u> fields.  The
+BSEQ field is a counter of the number of entries for this BID.  The BID is also a foreign
+key into the Product table.  The customer ID field, BCID, is used as a foreign key
+into the Customer table.
+<p>
+As a problem report comes in the data for this table is entered.  If this is a first-time
+customer a customer entry is made first.  The product table is already up-to-date.  To get
+a new BSEQ number, a key of BID+BSEQ with BSEQ set to 999 is used in a call to
+<code>BltGetEqualOrLesser</code>.  If a current entry for this BID exists, the last BSEQ
+used can be determined and then incremented by one for this entry.  If none currently exists,
+the BSEQ for this entry would be set to 1 ("001").  (It may be tempting to allow duplicate
+BID keys and forgo the need for BSEQ, but doing so can make extensions to this database
+impossible.)  The other fields are set as required.  The SUBSTR() operator is used on the
+BID and BSEQ fields to skip their trailing 0Ts when building the composite key.  This
+technique is shown in Part III.
+<p>
+<table border cellspacing=1 cellpadding=4>
+<caption>Problem/Enhancement (bug) table definition</caption>
+<tr>
+<th>fieldName
+<th>type
+<th>size
+<th>example
+<th>notes
+<tr>
+<td>unnamed
+<td align=center>n/a
+<td align=center>1
+<td align=center><code>'&nbsp;'</code>
+<td><code>*</code> (ASCII 42) marks record as deleted
+<tr>
+<td>BID
+<td align=center>C
+<td align=center>8
+<td align=center><code>"4011200"</code>
+<td>0T,&nbsp;&nbsp;pid(3), pver(4); foreign key into Product; PK comp 1/2
+<tr>
+<td>BSEQ
+<td align=center>C
+<td align=center>4
+<td align=center><code>"001"</code>
+<td>0T, sequence for this BID; PK comp 2/2
+<tr>
+<td>BDATE
+<td align=center>D
+<td align=center>8
+<td align=center><code>'19980923'</code>
+<td>&nbsp;
+<tr>
+<td>BTYPE
+<td align=center>C
+<td align=center>1
+<td align=center><code>'e'</code>
+<td>report type (b=bug report, e=enhancement request)
+<tr>
+<td>BP
+<td align=center>C
+<td align=center>1
+<td align=center><code>'4'</code>
+<td>priority code (0 to 9, 0=highest priority)
+<tr>
+<td>BCID
+<td align=center>C
+<td align=center>9
+<td align=center><code>"NaugP782"</code>
+<td>0T, foreign key into Customer
+<tr>
+<td>BST
+<td align=center>C
+<td align=center>1
+<td align=center><code>'o'</code>
+<td>status ('o'=open, 'x'=closed)
+<tr>
+<td>BSDESC
+<td align=center>C
+<td align=center>53
+<td align=center><code>"docs not completed"</code>
+<td>short description
+<tr>
+<td>BLDESC
+<td align=center>M
+<td align=center>10
+<td align=center><code>'0000000002'</code>
+<td>long description (memo)
+<tr>
+<td>&nbsp;
+<td>&nbsp;
+<td align=center>96
+<td>= record length
+<td>&nbsp;
+</table>
+<p>
+<table border cellspacing=1 cellpadding=4>
+<caption>Problem/Enhancement (bug) table data</caption>
+<th>*
+<th align=center><u>BID</u>
+<th align=center><u>BSEQ</u>
+<th align=center>BDATE
+<th align=center>BTYPE
+<th align=center>BP
+<th align=center>BCID
+<th align=center>BST
+<th align=center>BSDESC
+<th align=center>BLDESC
+<tr>
+<td>&nbsp;
+<td align=center>4050100
+<td align=center>001
+<td align=center>19980901
+<td align=center>b
+<td align=center>8
+<td align=center>AngsS844
+<td align=center>x
+<td align=left>driver loads even if H/W missing
+<td align=left>0000000001
+<tr>
+<td>&nbsp;
+<td align=center>4011200
+<td align=center>001
+<td align=center>19980923
+<td align=center>e
+<td align=center>4
+<td align=center>NaugP782
+<td align=center>o
+<td align=left>docs not completed
+<td align=left>0000000002
+</table>
+<p>
+<br>
+<br>
+<br>
+<br>
+<center><font size=-1>All content Copyright &copy; 1999 Cornel Huth.  All rights reserved.</font></center>
+</body>
+</html>

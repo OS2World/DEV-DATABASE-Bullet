@@ -1,0 +1,88 @@
+<html>
+<head>
+<title>BltIx4OpenFile</title>
+</head>
+<body>
+<h4>BltIx4OpenFile</h4>
+<br>
+<a href="r_bicf.htm">&lt;&nbsp;Prev</a>&nbsp;&nbsp;<a href="_toc.htm">TOC</a>&nbsp;&nbsp;<a href="r_biclf.htm">Next&nbsp;&gt;</a>
+<p>
+<pre>
+TBLT_RETC TBLT_ENTRY BltIx4OpenFile(TBLT_KH *khPtr, ULONG mode);
+
+
+ khPtr          I:index file control structure
+ mode           I:special-handling flags
+
+</pre>
+This routine opens an IX4 index file.
+<p>
+The TBLT_KH structure is to have already been allocated, using BltIx4InfoFile()
+if needed.  Before calling, the TBLT_KH structure should have the following
+members filled:
+<pre>
+ .filenamePtr
+ .asMode
+ .nodeSize
+ .xbLinkPtr
+</pre>
+<p>
+TBLT_KH.asMode is a bit-flag variable with the following meaning:
+<pre>
+ OPENFLAGS_COMMIT        0x400000 // slow file writes (DOS 4+, all)
+ OPENFLAGS_NOCRIT        0x200000 // critical errors trapped (DOS 4+, all)
+ OPENFLAGS_NOCACHE       0x100000 // (OS/2)
+ OPENFLAGS_FOURGB        0x100000 // (FAT32)
+ OPENFLAGS_IO_RNDSEQ     0x030000 // random access, some seq access (OS/2)
+ OPENFLAGS_IO_RND        0x020000 // mostly random access (OS/2)
+ OPENFLAGS_IO_SEQ        0x010000 // mostly sequential access (OS/2)
+                                  // the above values are >> 8 internally
+ OPENFLAGS_NOINHERIT     0x000080 // child programs do not inherit asMode
+ OPENFLAGS_DENY_NONE     0x000040 // share: do not deny others
+ OPENFLAGS_DENY_READ     0x000030 // share: deny others read
+ OPENFLAGS_DENY_WRITE    0x000020 // share: deny others write
+ OPENFLAGS_DENY_RW       0x000010 // share: deny others read/write
+ OPENFLAGS_COMPAT        0x000000 // share: illegal value
+ OPENFLAGS_ACCESS_READ7  0x000004 // access: read-only, time preserved (DOS7)
+ OPENFLAGS_ACCESS_RW     0x000002 // access: read/write
+ OPENFLAGS_ACCESS_WRITE  0x000001 // access: write only
+ OPENFLAGS_ACCESS_READ   0x000000 // access: read only
+</pre>
+The .nodeSize member may be any of the following: 512, 1024, 1536, 2048, 2560.
+<p>
+The .xbLinkPtr member is a pointer to the open DBF file's TBLT_DH structure
+that this index is for, gotten from <code>BltDataOpenFile()</code>.
+<p>
+<code>Mode</code> (the parameter, mode, not TBLT_KH.asMode) is a special-case flag with the
+following bit flags:
+<table border=0 cellspacing=4 cellpadding=4>
+<tr>
+<td valign=top><code>FLAGS_READ_THROUGH_LOCK_BIT</code>
+<td>Use read-through locking. This limits maximum filesize to one-half normal.
+<tr>
+<td valign=top><code>FLAGS_READONLY_BIT</code>
+<td>Disallow writes to this handle.  Any attempt
+to perform a write operation to this handle is
+rejected, and an error returned.
+<tr>
+<td valign=top><code>FLAGS_ATOMIC_BIT</code>
+<td>Use atomic access on key next/prev access routines.  More
+on atomic access is in the supplemental documentation.
+</table>
+<em>Returns:</em>&nbsp;Non-zero indicates an error, otherwise the file is opened with the
+following members of TBLT_KH filled in:
+<pre>
+ .handle
+ .fType
+ .nodeSize (again)
+ all data from TBLT_KH.fileID to before TBLT_KH.buffer[]
+</pre>
+If this file was not previously closed properly, a <code>WRN_INCOMPLETE_XACTION</code>
+error is returned; the IX4 is still open.
+<br>
+<br>
+<br>
+<p>
+<center><font size=-1>All content Copyright &copy; 1999 Cornel Huth.  All rights reserved.</font></center>
+</body>
+</html>

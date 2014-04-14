@@ -1,0 +1,67 @@
+<html>
+<head>
+<title>MyBltIx4Crypto</title>
+</head>
+<body>
+<h4>MyBltIx4Crypto</h4>
+<br>
+<a href="bltix4.htm">&lt;&nbsp;Prev</a>&nbsp;&nbsp;<a href="_toc.htm">TOC</a>&nbsp;&nbsp;<a href="bltix4.htm">Next&nbsp;&gt;</a>
+<p>
+<pre>
+TBLT_RETC TBLT_CALLBACK MyBltIx4Crypto(ULONG mode,
+                                       TBLT_KH *khPtr,
+                                       VOID *keyPtr,
+                                       ULONG recNoPlus);
+
+
+ mode           I:sub-function to perform
+ khPtr          I:index file control structure
+ keyPtr         IO:key buffer pointer; or node stream pointer
+ recNoPlus      I:number of the record (informational); or node count
+
+</pre>
+<em>Note:</em>  This routine is not part of the base Bullet 3 package but is
+documented here <i>for the record</i>.  An example crypto routine is included in
+the regular distribution (crypto.c).  Once written, a function pointer to the
+crypto routine is assigned to TBLT_KH.cryptoPtr.
+<p>
+This routine encrypts or decrypts the index key, depending on the mode.
+<p>
+The mode parameter varies depending on which Bullet routine calls here:
+<pre>
+ CRYPTO_FROM_KEYADD     from the btree manager
+ CRYPTO_FROM_KEYGET     from the btree manager
+ CRYPTO_FROM_KEYADDBULK from BltFuncIx4Reindex()
+</pre>
+<p>
+For <code>KEYADD</code>, the key buffer should be encrypted.  For <code>KEYGET</code> it
+should be decrypted.  The key is both read and written to keyPtr.  The size of the key
+is available in khPtr-&gt;keyLength.  The recNo is provided for informational use.
+<p>
+For <code>KEYADDBULK</code>, keyPtr no longer points to a single key buffer, but instead
+points to a stream of key nodes to be encrypted.  Also, recNoPlus is now the count of nodes
+to encrypt, and not a record number.
+<p>
+The node stream consists of one or more nodes (each of khPtr-&gt;nodeSize bytes), with the first
+byte of each node holding the number of keys on that node (the key count).  Each key is
+khPtr-&gt;keyLength in size, with 4 bytes of workspace before the key (an internally-used node
+pointer) and 4 bytes after the key proper for the record number.  Therefore, keys are
+(4+khPtr-&gt;keyLength+4) bytes apart from each other (<em>ie</em> key length plus 8 bytes),
+within a node.
+<p>
+The first key element (a key element is 4+keylength+4 bytes in size) immediately follows the key
+count byte.  Therefore, the first key proper is at keyPtr[5] (skipping the key count byte, plus
+the 4-byte nodeptr).  The second key proper is at keyPtr[5+khPtr-&gt;keyLength+8] (+8 to skip over
+the first key's record number and the 4-byte nodeptr of the second key).
+<p>
+The first key proper of the second node (if there is more than one node -- as indicated by
+recNoPlus) is at keyPtr[khPtr-&gt;nodeSize+5], and so on.
+<p>
+<em>Return:</em>&nbsp;Non-zero indicates an error, otherwise the data at keyPtr
+has been encrypted or decrypted.
+<br>
+<br>
+<p>
+<center><font size=-1>All content Copyright &copy; 1999 Cornel Huth.  All rights reserved.</font></center>
+</body>
+</html>

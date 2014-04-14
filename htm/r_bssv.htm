@@ -1,0 +1,46 @@
+<html>
+<head>
+<title>BltSetVar</title>
+</head>
+<body>
+<h4>BltSetVar</h4>
+<br>
+<a href="r_bsgv.htm">&lt;&nbsp;Prev</a>&nbsp;&nbsp;<a href="_toc.htm">TOC</a>&nbsp;&nbsp;<a href="bltmisc.htm">Next&nbsp;&gt;</a>
+<p>
+<pre>
+TBLT_RETC TBLT_ENTRY BltSetVar(ULONG *varPtr,
+                               LONG index);
+
+
+ varPtr         IO:new value of item/old value of item
+ index          I:index of item to set
+
+</pre>
+This routine sets a Bullet state variable.  These states should only be
+modified when Bullet is idle (<em>eg</em>, at program startup).
+<p>
+The following item index values are available to set:
+<pre>
+ BLTVAR_MPNL      default max pathname length
+ BLTVAR_MPCL      default max pathname component length
+ BLTVAR_MPXL      default max pathname extension length
+ BLTVAR_MFSF      max file size fudge (128KB)
+ BLTVAR_MARSV     default bytes to hold back from Bullet reindex
+ BLTVAR_MASZRX    default max total memory reindex may allocate
+ BLTVAR_MASZ      default max single allocation request size
+ BLTVAR_MCBSZ     memo copy buffer size (2KB)
+ BLTVAR_MCBMAM    memo copy buffer memory allocation strategy (0)
+</pre>
+Default (values) above are used when the corresponding value in the TBLT_KH/TBLT_DH
+structure is set to 0.  The default values vary depending on platform except where
+explicitly shown above.
+<p>
+<em>Returns:</em>&nbsp;Non-zero indicates an error, otherwise the item is
+set to the new value, and varPtr has the item's old value.
+<br>
+<br>
+<br>
+<p>
+<center><font size=-1>All content Copyright &copy; 1999 Cornel Huth.  All rights reserved.</font></center>
+</body>
+</html>

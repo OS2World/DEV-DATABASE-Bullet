@@ -1,0 +1,51 @@
+<html>
+<head>
+<title>BltIx4InfoFile</title>
+</head>
+<body>
+<h4>BltIx4InfoFile</h4>
+<br>
+<a href="bltix4.htm">&lt;&nbsp;Prev</a>&nbsp;&nbsp;<a href="_toc.htm">TOC</a>&nbsp;&nbsp;<a href="r_bicf.htm">Next&nbsp;&gt;</a>
+<p>
+<pre>
+TBLT_RETC TBLT_ENTRY BltIx4InfoFile(TBLT_FNCHAR *filenamePtr,
+                                    ULONG asMode,
+                                    TBLT_IX4INFO *ix4InfoPtr,
+                                    TBLT_AUXPACK *apPtr);
+
+
+ filenamePtr    I:name of file to get info on
+ asMode         I:access-share mode used for temporary open
+ ix4InfoPtr     I:structure to store the IX4 info
+ apPtr          I:auxiliary pack
+
+</pre>
+This routine should be called before opening an unknown IX4 file (where its
+node size is not known), especially to get the node size used so that a
+TBLT_KH structure of correct size can be allocated for the actual open.
+<p>
+<code>asMode</code> is the access-sharing mode to open the file.  See
+<code>BltDataOpenFile()</code> for modes available.  The file is closed
+before this routine exits.
+<p>
+TBLT_IX4INFO is the same structure as the first 44 bytes of the TBLT_KH structure
+starting from fileID.  TBLT_IX4INFO.nodeSize is used to determine what size
+the TBLT_KH allocation must be to hold both the TBLT_KH structure and the node
+buffer.  The TBLT_KH structure includes allocation for a 512-byte buffer (the
+typical node size).  The total allocation size for TBLT_KH, then, required prior
+to calling BltIx4OpenFile(), is
+<p>
+<pre>
+ sizeof(TBLT_KH) + (nodeSize-512)
+</pre>
+<p>
+<code>apPtr</code> is the pointer to an optional auxiliary pack.  Set apPtr = 0 if there
+is no pack.  This pack lets you override the internal operating system IFS calls for this
+handle, and set IFS options, such as 64-bit file offsets.  See the supplemental
+documentation for details.  Once opened, apPtr is set in the TBLT_KH structure.
+<em>Returns:</em>&nbsp;Non-zero indicates an error, otherwise the structure at ix4InfoPtr receives
+the first 44 bytes of the IX4 header on disk.
+<p>
+<center><font size=-1>All content Copyright &copy; 1999 Cornel Huth.  All rights reserved.</font></center>
+</body>
+</html>

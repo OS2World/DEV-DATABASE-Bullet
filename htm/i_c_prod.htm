@@ -1,0 +1,135 @@
+<html>
+<head>
+<title>Bullet 3.0 [C/C++ prototypes for DynaLoad (b3protod.h)]</title>
+</head>
+<body>
+<h5>File: b3protod.h</h5>
+<br>
+<a href="i_c_pro.htm">&lt;&nbsp;Prev</a>&nbsp;&nbsp;<a href="_toc.htm">TOC</a>&nbsp;&nbsp;<a href="i_c.htm">Next&nbsp;&gt;</a>
+<pre>
+//
+// b3protod.h
+// 1-Jan-1999
+// Bullet 3 include, protos for LoadLibrary/GetProcAddr (see dynaload.c example)
+// Copyright (C)1999 Cornel Huth        http://40th.com/
+//
+
+typedef TBLT_RETC (TBLT_ENTRY *BLTDATAINFOFILE)(TBLT_FNCHAR *filenamePtr, ULONG asMode, TBLT_DBFINFO *dbfInfoPtr, ULONG *noFieldsPtr, TBLT_AUXPACK *apPtr);
+typedef TBLT_RETC (TBLT_ENTRY *BLTDATACREATEFILE)(ULONG fileID, ULONG fields, TBLT_FD *fieldListPtr, TBLT_FNCHAR *filenamePtr, ULONG maMode, TBLT_AUXPACK *apPtr);
+typedef TBLT_RETC (TBLT_ENTRY *BLTDATAOPENFILE)(TBLT_DH *dhPtr, ULONG mode);
+typedef TBLT_RETC (TBLT_ENTRY *BLTDATACLOSEFILE)(TBLT_DH *dhPtr);
+typedef TBLT_RETC (TBLT_ENTRY *BLTDATAFLUSHHEADER)(TBLT_DH *dhPtr);
+typedef TBLT_RETC (TBLT_ENTRY *BLTDATACOPYHEADER)(TBLT_DH *dhPtr, TBLT_FNCHAR *filenamePtr);
+typedef TBLT_RETC (TBLT_ENTRY *BLTDATAREADHEADER)(TBLT_DH *dhPtr);
+typedef TBLT_RETC (TBLT_ENTRY *BLTDATAZAPHEADER)(TBLT_DH *dhPtr);
+typedef TBLT_RETC (TBLT_ENTRY *BLTDATAADDRECORD)(TBLT_DH *dhPtr, VOID *recordPtr, ULONG *recNoPtr);
+typedef TBLT_RETC (TBLT_ENTRY *BLTDATADEBUMPRECORD)(TBLT_DH *dhPtr, ULONG recNo);
+typedef TBLT_RETC (TBLT_ENTRY *BLTDATAMARKRECORD)(TBLT_DH *dhPtr, ULONG recNo, ULONG tagChar);
+typedef TBLT_RETC (TBLT_ENTRY *BLTDATAUPDATERECORD)(TBLT_DH *dhPtr, ULONG recNo, VOID *recordPtr);
+typedef TBLT_RETC (TBLT_ENTRY *BLTDATAGETRECORD)(TBLT_DH *dhPtr, ULONG recNo, VOID *recordPtr);
+typedef TBLT_RETC (TBLT_ENTRY *BLTDATASORT)(TBLT_FNCHAR *indexnamePtr, TBLT_FNCHAR *filenamePtr, TBLT_FNCHAR *newFilenamePtr,TBLT_DATACALLBACKPTR callBackPtr, TBLT_AUXPACK *apPtr);
+typedef TBLT_RETC (TBLT_ENTRY *BLTDATAPACK)(TBLT_FNCHAR *filenamePtr, TBLT_FNCHAR *newFilenamePtr,TBLT_DATACALLBACKPTR callBackPtr, TBLT_AUXPACK *apPtr);
+
+#define BltDataDeleteRecord(a,b)    BltDataMarkRecord(a,b,42)
+#define BltDataUndeleteRecord(a,b)  BltDataMarkRecord(a,b,32)
+
+typedef TBLT_RETC (TBLT_ENTRY *BLTMEMOCREATEFILE)(TBLT_DH *dhPtr);
+typedef TBLT_RETC (TBLT_ENTRY *BLTMEMOCLOSEFILE)(TBLT_DH *dhPtr);
+typedef TBLT_RETC (TBLT_ENTRY *BLTMEMOOPENFILE)(TBLT_DH *dhPtr);
+typedef TBLT_RETC (TBLT_ENTRY *BLTMEMOFLUSHHEADER)(TBLT_DH *dhPtr);
+typedef TBLT_RETC (TBLT_ENTRY *BLTMEMOREADHEADER)(TBLT_DH *dhPtr);
+typedef TBLT_RETC (TBLT_ENTRY *BLTMEMOADD)(TBLT_DH *dhPtr, ULONG bytesToSize, ULONG bytesToWrite, VOID *bufferPtr, ULONG *memoNoPtr, ULONG rsvFlag);
+typedef TBLT_RETC (TBLT_ENTRY *BLTMEMODELETE)(TBLT_DH *dhPtr, ULONG memoNo);
+typedef TBLT_RETC (TBLT_ENTRY *BLTMEMOGET)(TBLT_DH *dhPtr, ULONG memoNo, ULONG startOffset, ULONG *bytesToReadPtr, VOID *bufferPtr);
+typedef TBLT_RETC (TBLT_ENTRY *BLTMEMOGETSIZE)(TBLT_DH *dhPtr, ULONG memoNo, ULONG *availLinkPtr, ULONG *memoSizePtr);
+typedef TBLT_RETC (TBLT_ENTRY *BLTMEMOUPDATE)(TBLT_DH *dhPtr, ULONG *memoNoPtr, ULONG startOffset, ULONG bytesToWrite, VOID *bufferPtr);
+
+typedef TBLT_RETC (TBLT_ENTRY *BLTIX4INFOFILE)(TBLT_FNCHAR *filenamePtr, ULONG asMode, TBLT_IX4INFO *ix4InfoPtr, TBLT_AUXPACK *apPtr);
+typedef TBLT_RETC (TBLT_ENTRY *BLTIX4CREATEFILE)(ULONG nodeSize, ULONG sortCmpCode,
+                                      ULONG codePage, ULONG countryCode, UCHAR *sortTablePtr,
+                                      VOID *keyExpPtr, TBLT_DH *dhPtr, TBLT_FNCHAR *filenamePtr,
+                                      TBLT_IX4PARSEEXPPTR xParseExpPtr,
+                                      ULONG maMode, TBLT_AUXPACK *apPtr);
+typedef TBLT_RETC (TBLT_ENTRY *BLTIX4OPENFILE)(TBLT_KH *khPtr, ULONG mode);
+typedef TBLT_RETC (TBLT_ENTRY *BLTIX4CLOSEFILE)(TBLT_KH *khPtr);
+typedef TBLT_RETC (TBLT_ENTRY *BLTIX4FLUSHHEADER)(TBLT_KH *khPtr);
+typedef TBLT_RETC (TBLT_ENTRY *BLTIX4COPYHEADER)(TBLT_KH *khPtr, TBLT_FNCHAR *filenamePtr);
+typedef TBLT_RETC (TBLT_ENTRY *BLTIX4READHEADER)(TBLT_KH *khPtr);
+typedef TBLT_RETC (TBLT_ENTRY *BLTIX4ZAPHEADER)(TBLT_KH *khPtr);
+typedef TBLT_RETC (TBLT_ENTRY *BLTIX4KEYFORRECORD)(TBLT_KH *khPtr, VOID *keyBufferPtr, ULONG recNo, VOID *recordPtr);
+typedef TBLT_RETC (TBLT_ENTRY *BLTIX4DELETEKEY)(TBLT_KH *khPtr, VOID *keyBufferPtr, ULONG recNo);
+typedef TBLT_RETC (TBLT_ENTRY *BLTIX4STOREKEY)(TBLT_KH *khPtr, VOID *keyBufferPtr, ULONG recNo);
+typedef TBLT_RETC (TBLT_ENTRY *BLTIX4EQUALKEY)(TBLT_KH *khPtr, VOID *keyBufferPtr, ULONG *recNoPtr);
+typedef TBLT_RETC (TBLT_ENTRY *BLTIX4EQUALORGREATERKEY)(TBLT_KH *khPtr, VOID *keyBufferPtr, ULONG *recNoPtr);
+typedef TBLT_RETC (TBLT_ENTRY *BLTIX4EQUALORLESSERKEY)(TBLT_KH *khPtr, VOID *keyBufferPtr, ULONG *recNoPtr);
+typedef TBLT_RETC (TBLT_ENTRY *BLTIX4FIRSTKEY)(TBLT_KH *khPtr, VOID *keyBufferPtr, ULONG *recNoPtr);
+typedef TBLT_RETC (TBLT_ENTRY *BLTIX4LASTKEY)(TBLT_KH *khPtr, VOID *keyBufferPtr, ULONG *recNoPtr);
+typedef TBLT_RETC (TBLT_ENTRY *BLTIX4NEXTKEY)(TBLT_KH *khPtr, VOID *keyBufferPtr, ULONG *recNoPtr);
+typedef TBLT_RETC (TBLT_ENTRY *BLTIX4PREVKEY)(TBLT_KH *khPtr, VOID *keyBufferPtr, ULONG *recNoPtr);
+
+typedef TBLT_RETC (TBLT_ENTRY *BLTLOCKEX)(TBLT_LOCKEX *lockExPtr, ULONG *slotPtr, ULONG timeout);
+typedef TBLT_RETC (TBLT_ENTRY *BLTUNLOCKEX)(TBLT_LOCKEX *lockExPtr, ULONG *slotPtr);
+typedef TBLT_RETC (TBLT_ENTRY *BLTLOCKDATAHEADER)(TBLT_DH *dhPtr, ULONG mode, ULONG timeout);
+typedef TBLT_RETC (TBLT_ENTRY *BLTUNLOCKDATAHEADER)(TBLT_DH *dhPtr);
+typedef TBLT_RETC (TBLT_ENTRY *BLTLOCKDATARECORD)(TBLT_DH *dhPtr, ULONG mode, ULONG recNoStart, ULONG recCount, ULONG timeout);
+typedef TBLT_RETC (TBLT_ENTRY *BLTUNLOCKDATARECORD)(TBLT_DH *dhPtr, ULONG recNoStart, ULONG recCount);
+typedef TBLT_RETC (TBLT_ENTRY *BLTLOCKIX4FILE)(TBLT_KH *khPtr, ULONG mode, ULONG timeout);
+typedef TBLT_RETC (TBLT_ENTRY *BLTUNLOCKIX4FILE)(TBLT_KH *khPtr);
+
+typedef TBLT_RETVAL (TBLT_ENTRY *BLTGETVAR)(LONG index, TBLT_RETC *rcPtr);
+typedef TBLT_RETC (TBLT_ENTRY *BLTSETVAR)(ULONG *varPtr, LONG index);
+
+typedef TBLT_RETC (TBLT_ENTRY *BLTIX4INSERT)(TBLT_KH *khPtr, VOID *keyBufferPtr, ULONG *recNoPtr, VOID *recordPtr, ULONG *actionPtr);
+typedef TBLT_RETC (TBLT_ENTRY *BLTIX4INSERTEX)(TBLT_IUEX *iuexPtr, ULONG *slotPtr);
+typedef TBLT_RETC (TBLT_ENTRY *BLTIX4UPDATE)(TBLT_KH *khPtr, VOID *keyBufferPtr, ULONG recNo, VOID *newRecPtr, ULONG *actionPtr);
+typedef TBLT_RETC (TBLT_ENTRY *BLTIX4UPDATEEX)(TBLT_IUEX *iuexPtr, ULONG *slotPtr, ULONG maMode);
+typedef TBLT_RETC (TBLT_ENTRY *BLTIX4GETFIRST)(TBLT_KH *khPtr, VOID *keyBufferPtr, ULONG *recNoPtr, VOID *recordPtr);
+typedef TBLT_RETC (TBLT_ENTRY *BLTIX4GETNEXT)(TBLT_KH *khPtr, VOID *keyBufferPtr, ULONG *recNoPtr, VOID *recordPtr);
+typedef TBLT_RETC (TBLT_ENTRY *BLTIX4GETPREV)(TBLT_KH *khPtr, VOID *keyBufferPtr, ULONG *recNoPtr, VOID *recordPtr);
+typedef TBLT_RETC (TBLT_ENTRY *BLTIX4GETLAST)(TBLT_KH *khPtr, VOID *keyBufferPtr, ULONG *recNoPtr, VOID *recordPtr);
+typedef TBLT_RETC (TBLT_ENTRY *BLTIX4GETEQUAL)(TBLT_KH *khPtr, VOID *keyBufferPtr, ULONG *recNoPtr, VOID *recordPtr);
+typedef TBLT_RETC (TBLT_ENTRY *BLTIX4GETEQUALORGREATER)(TBLT_KH *khPtr, VOID *keyBufferPtr, ULONG *recNoPtr, VOID *recordPtr);
+typedef TBLT_RETC (TBLT_ENTRY *BLTIX4GETEQUALORLESSER)(TBLT_KH *khPtr, VOID *keyBufferPtr, ULONG *recNoPtr, VOID *recordPtr);
+typedef TBLT_RETC (TBLT_CALLBACK *BLTFUNCIX4REINDEX)(TBLT_KH *khPtr, TBLT_FNCHAR *workFilePtr, ULONG nodePackPct, VOID *keyPtr, ULONG *recNoPtr);
+typedef TBLT_CMPC (TBLT_CALLBACK *BLTFUNCIX4SORTCMP)(TBLT_KH *khPtr, VOID *arg1ptr, VOID *arg2ptr, UCHAR *hvBufferPtr, ULONG hasRecNo);
+
+typedef TBLT_RETC (TBLT_ENTRY *BLTWRITEATFILE)(TBLT_HANDLE handle, ULONG *bytesPtr, VOID *bufferPtr, TBLT_FO *offsetPtr, TBLT_AUXPACK *apPtr);
+typedef TBLT_RETC (TBLT_ENTRY *BLTREADATFILE)(TBLT_HANDLE handle, ULONG *bytesPtr, VOID *bufferPtr, TBLT_FO *offsetPtr, TBLT_AUXPACK *apPtr);
+typedef TBLT_RETC (TBLT_ENTRY *BLTCLOSEFILE)(TBLT_HANDLE *handlePtr, TBLT_AUXPACK *apPtr);
+typedef TBLT_RETC (TBLT_ENTRY *BLTCREATEDIR)(TBLT_FNCHAR *dirnamePtr, TBLT_AUXPACK *apPtr);
+typedef TBLT_RETC (TBLT_ENTRY *BLTCREATEFILE)(TBLT_FNCHAR *filenamePtr, TBLT_AUXPACK *apPtr);
+typedef TBLT_RETC (TBLT_ENTRY *BLTDELETEFILE)(TBLT_FNCHAR *filenamePtr, TBLT_AUXPACK *apPtr);
+typedef TBLT_RETC (TBLT_ENTRY *BLTMOVEFILE)(TBLT_FNCHAR *currNamePtr, TBLT_FNCHAR *newNamePtr, TBLT_AUXPACK *apPtr);
+typedef TBLT_RETC (TBLT_ENTRY *BLTLENGTHFILE)(TBLT_HANDLE handle, TBLT_FO *lengthPtr, TBLT_AUXPACK *apPtr);
+typedef TBLT_RETC (TBLT_ENTRY *BLTOPENFILE)(TBLT_FNCHAR *filenamePtr, ULONG asMode, TBLT_HANDLE *handlePtr, TBLT_AUXPACK *apPtr);
+typedef TBLT_RETC (TBLT_ENTRY *BLTREADFILE)(TBLT_HANDLE handle, ULONG *bytesPtr, VOID *bufferPtr, TBLT_AUXPACK *apPtr);
+typedef TBLT_RETC (TBLT_ENTRY *BLTSEEKFILE)(TBLT_HANDLE handle, ULONG mode, TBLT_FO *posPtr, TBLT_AUXPACK *apPtr);
+typedef TBLT_RETC (TBLT_ENTRY *BLTUPDATEDIRENTRY)(TBLT_HANDLE handle, TBLT_AUXPACK *apPtr);
+typedef TBLT_RETC (TBLT_ENTRY *BLTWRITEFILE)(TBLT_HANDLE handle, ULONG *bytesPtr, VOID *bufferPtr, TBLT_AUXPACK *apPtr);
+typedef TBLT_RETC (TBLT_ENTRY *BLTLOCKFILE)(TBLT_HANDLE handle, ULONG mode, TBLT_FO *lockOffsetPtr, TBLT_FO *lockBytesPtr, ULONG timeout, TBLT_AUXPACK *apPtr);
+typedef TBLT_RETC (TBLT_ENTRY *BLTISREMOTE)(TBLT_HANDLE handle, ULONG drive, ULONG *isRemotePtr, ULONG *flagsPtr, TBLT_AUXPACK *apPtr);
+
+typedef TBLT_RETPTR (TBLT_ENTRY *BLTMEMALLOC)(ULONG mode, ULONG count, TBLT_RETC *rcPtr, ULONG flag0);
+typedef TBLT_RETC (TBLT_ENTRY *BLTMEMFREE)(ULONG mode, VOID *memHandlePtr);
+typedef TBLT_RETC (TBLT_ENTRY *BLTSETHANDLECOUNT)(ULONG *maxHandlesPtr);
+
+typedef TBLT_RETC (TBLT_ENTRY *BLTGETSORTSEQUENCETABLE)(ULONG cpID, ULONG ccID, UCHAR *bufferPtr, ULONG charsetFlag);
+typedef TBLT_RETC (TBLT_ENTRY *BLTGETCOUNTRYINFO)(ULONG *cpIDptr, ULONG *ccIDptr, ULONG charsetFlag);
+typedef TBLT_RETC (TBLT_ENTRY *BLTGETEXTENDEDERROR)(TBLT_RETC *exRCptr, ULONG *xeClassPtr, ULONG *xeActionPtr, ULONG *xeLocusPtr);
+typedef TBLT_RETVAL (TBLT_ENTRY *BLTGETMEMORYAVAIL)(ULONG mode);
+typedef TBLT_RETC (TBLT_ENTRY *BLTGETVERSION)(ULONG *verDosPtr);
+typedef TBLT_RETC (TBLT_ENTRY *BLTUPPERCASEO)(UCHAR *strgPtr, ULONG maxSize, ULONG flag0);
+typedef TBLT_RETC (TBLT_ENTRY *BLTCLOSEMUTEXSEM)(TBLT_HANDLE handle);
+typedef TBLT_RETC (TBLT_ENTRY *BLTCREATEMUTEXSEM)(UCHAR *namePtr, TBLT_HANDLE *handlePtr, ULONG attrFlags, ULONG stateFlag);
+typedef TBLT_RETC (TBLT_ENTRY *BLTREQUESTMUTEXSEM)(TBLT_HANDLE handle, ULONG timeout);
+typedef TBLT_RETC (TBLT_ENTRY *BLTRELEASEMUTEXSEM)(TBLT_HANDLE handle);
+
+// end b3protod.h
+</pre>
+<br>
+<br>
+<br>
+<br>
+<center><font size=-1>All content Copyright &copy; 1999 Cornel Huth.  All rights reserved.</font></center>
+</body>
+</html>

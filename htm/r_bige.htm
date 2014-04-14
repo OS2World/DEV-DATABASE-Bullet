@@ -1,0 +1,44 @@
+<html>
+<head>
+<title>BltIx4GetEqual</title>
+</head>
+<body>
+<h4>BltIx4GetEqual</h4>
+<br>
+<a href="r_biu.htm">&lt;&nbsp;Prev</a>&nbsp;&nbsp;<a href="_toc.htm">TOC</a>&nbsp;&nbsp;<a href="r_bigeg.htm">Next&nbsp;&gt;</a>
+<p>
+<pre>
+TBLT_RETC TBLT_ENTRY BltIx4GetEqual(TBLT_KH *khPtr,
+                                    VOID *keyBufferPtr,
+                                    ULONG *recNoPtr,
+                                    VOID *recordPtr);
+
+
+ khPtr          I:index file control structure
+ keyBufferPtr   I:key to find
+ recNoPtr       IO:recNo to match (or 0)/recNo of key found
+ recordPtr      O:record data of found key
+
+</pre>
+This routine finds the exact match for the key in keyBufferPtr and the
+recNo in recNoPtr and returns its data record.  If recNo is passed as zero,
+the first key matched is used (that is, the key with the lowest recNo).
+<p>
+This routine only finds exact matches. If the TBLT_DH.flags bit
+<code>FLAGS_SKIP_DELETED_BIT</code>, of khPtr->xbLinkPtr->flags, is set, this
+routine returns a <code>EXB_KEY_NOT_FOUND</code> if the found key has a data
+record marked with a <code>*</code> (star) in the delete tag field (the first
+byte of the data record).
+<p>
+Note: The key to find must match exactly with a key in the index file, for all
+keyLength bytes.  The compare does not stop at a \0, even if the key is a
+character type.
+<p>
+<em>Return:</em>&nbsp;Non-zero indicates an error, otherwise the recNo/recordPtr is returned.
+<br>
+<br>
+<br>
+<p>
+<center><font size=-1>All content Copyright &copy; 1999 Cornel Huth.  All rights reserved.</font></center>
+</body>
+</html>
